@@ -55,7 +55,6 @@ public class PantallaPartida implements Screen {
 
     private final float CARTA_ANCHO = WORLD_WIDTH * CARTA_PROPORCION_ANCHO;
     private final float CARTA_ALTO = CARTA_ANCHO * CARTA_RELACION_ASPECTO;
-    private int mano;
 
     private PantallaFinal pantallaFinal;
 
@@ -145,7 +144,7 @@ public class PantallaPartida implements Screen {
         );
 
         partida.inicializar(zonaJuegoJugador, zonaJuegoRival, rivalBot,
-                jugadores.get(0), jugadores.get(1), mano);
+                jugadores.get(0), jugadores.get(1));
 
         rivalBot.setPartida(partida);
 
@@ -163,7 +162,8 @@ public class PantallaPartida implements Screen {
                 btnTrucoAlto,
                 font,
                 viewport,
-                partida
+                partida,
+                hc
         );
 
         pantallaFinal = new PantallaFinal(
@@ -252,20 +252,20 @@ public class PantallaPartida implements Screen {
     public void update(float delta) {
         animacion.update(delta);
         partida.update(delta);
-
+        if (partida.esTurnoJugador()) {
+            // AQUÍ: Enviar al servidor la carta jugada
+            // hc.enviarMensaje("CARTA_JUGADA:" + numeroCarta + ":" + palo);
+        }
         manoManager.setEsMiTurno(partida.esTurnoJugador());
 
-        // ✅ REFACTORIZADO: Actualizar botón de truco y pantalla final
         if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
             botonTruco.update(delta);
             botonTruco.detectarClick();
         }
 
-        // ✅ REFACTORIZADO: Actualizar pantalla final si está activa
         if (pantallaFinal.isActiva()) {
             boolean solicitudVolver = pantallaFinal.update(delta);
             if (solicitudVolver) {
-                // ✅ FIX: Solo setear el flag, no cambiar de pantalla aquí
                 debeVolverAlMenu = true;
             }
             return;
@@ -273,7 +273,7 @@ public class PantallaPartida implements Screen {
 
         // Verificar si la partida terminó
         if (partida.partidaTerminada() && !pantallaFinal.isActiva()) {
-            // ✅ REFACTORIZADO: Activar la pantalla final
+
             pantallaFinal.activar(
                     partida.getGanador(),
                     jugadores.get(0),
@@ -287,7 +287,6 @@ public class PantallaPartida implements Screen {
             return;
         }
 
-        // Si la partida está lista para nueva ronda
         if (partida.rondaTerminada()) {
             inicioRonda = true;
             partida.nuevaRonda();

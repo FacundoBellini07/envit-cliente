@@ -22,7 +22,7 @@ public class ManoManager {
 
     private ArrayList<CartaInput> cartaInputs;
     private ZonaJuego zonaJuego;
-    
+
     private boolean esMiTurno = true;
 
     public ManoManager(Jugador jugador, CartaRenderer renderer, Viewport viewport,

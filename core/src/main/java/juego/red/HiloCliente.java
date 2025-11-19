@@ -44,12 +44,45 @@ public void enviarMensaje(String mensaje) {
     }
     private void procesarMensaje(DatagramPacket dp) {
         String mensaje = (new String(dp.getData())).trim();
-        if(mensaje.equals("OK")){
-            System.out.println("Conectado al servidor");
-            ipserver = dp.getAddress();
-        }
-        else if(mensaje.equals("Empieza")){
-            Global.empieza = true;
+        switch(mensaje){
+            case "OK":
+                System.out.println("Conectado al servidor");
+                ipserver = dp.getAddress();
+                break;
+            case "Empieza":
+                Global.empieza = true;
+                break;
+            default:
+                if(mensaje.startsWith("ESTADO:")){
+                    procesarEstadoPartida(mensaje);
+                }
+                break;
         }
     }
+
+    private void procesarEstadoPartida(String mensaje) {
+        // Remover "ESTADO:"
+        mensaje = mensaje.replace("ESTADO:", "");
+
+        // Split por ":"
+        String[] partes = mensaje.split(":");
+
+        int mano       = Integer.parseInt(partes[0].split("=")[1]);
+        int puntosJ1   = Integer.parseInt(partes[1].split("=")[1]);
+        int puntosJ2   = Integer.parseInt(partes[2].split("=")[1]);
+        int turno      = Integer.parseInt(partes[3].split("=")[1]);
+
+        // Guardar en Global o en un singleton de estado
+        Global.mano = mano;
+        Global.puntosJ1 = puntosJ1;
+        Global.puntosJ2 = puntosJ2;
+        Global.turno = turno;
+
+        System.out.println("[CLIENTE] Estado actualizado:");
+        System.out.println("Mano=" + mano +
+                " P1=" + puntosJ1 +
+                " P2=" + puntosJ2 +
+                " Turno=" + turno);
+    }
+
 }

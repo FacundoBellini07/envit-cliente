@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.pantallas.Partida;
+import juego.red.HiloCliente;
 
 /**
  * Botón visual para cantar Truco en el juego
@@ -38,8 +39,10 @@ public class BotonTruco {
     private float btnAncho;
     private float btnAlto;
 
+    private HiloCliente hc;
+
     public BotonTruco(float x, float y, float ancho, float alto,
-                      BitmapFont font, Viewport viewport, Partida partida) {
+                      BitmapFont font, Viewport viewport, Partida partida, HiloCliente hc) {
         this.btnAncho = ancho;
         this.btnAlto = alto;
         this.font = font;
@@ -48,6 +51,7 @@ public class BotonTruco {
 
         this.btnRect = new Rectangle(x, y, ancho, alto);
         this.animacionPulso = 0f;
+        this.hc = hc;
     }
 
     public void update(float delta) {
@@ -65,17 +69,12 @@ public class BotonTruco {
      * Dibuja el botón
      */
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        // ✅ NUEVO: El botón solo está disponible si:
-        // 1. No se usó el truco aún
-        // 2. Es el primer turno de la mano
-        // 3. Es el turno del jugador 1
-        // 4. El jugador 1 es quien empieza esta mano
+
         boolean trucoDisponible = !partida.isTrucoUsado()
                 && partida.esPrimerTurnoEnMano()
                 && partida.esTurnoJugador()
                 && partida.jugador1EmpiezaEstaMano();
 
-        // Calcular color y escala según estado
         Color colorBtn;
         float escala = 1.0f;
 
@@ -112,7 +111,6 @@ public class BotonTruco {
         );
         shapeRenderer.end();
 
-        // Borde del botón
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.WHITE);
         shapeRenderer.rect(
@@ -125,7 +123,6 @@ public class BotonTruco {
 
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        // Dibujar texto
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
 
@@ -140,7 +137,6 @@ public class BotonTruco {
 
         font.draw(batch, textoTruco, textX, textY);
 
-        // Si está activo en esta mano, mostrar indicador
         if (partida.isTrucoActivoEnManoActual()) {
             font.getData().setScale(0.8f);
             font.setColor(colorIndicador);
@@ -155,7 +151,7 @@ public class BotonTruco {
     }
 
     private void actualizarHover() {
-        // ✅ ACTUALIZADO: Solo hacer hover si el botón está disponible
+
         boolean trucoDisponible = !partida.isTrucoUsado()
                 && partida.esPrimerTurnoEnMano()
                 && partida.esTurnoJugador()
@@ -189,6 +185,7 @@ public class BotonTruco {
 
         if (exito) {
             System.out.println("¡TRUCO cantado por el jugador!");
+            hc.enviarMensaje("TRUCO");
         }
 
         return exito;

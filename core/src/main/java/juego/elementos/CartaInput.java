@@ -4,6 +4,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.math.Rectangle;
+import juego.red.HiloCliente;
 
 public class CartaInput implements InputProcessor {
 
@@ -27,11 +28,13 @@ public class CartaInput implements InputProcessor {
 
     private boolean habilitado = true;
 
-    public CartaInput(Carta carta, Viewport viewport, float ancho, float alto) {
+    private HiloCliente hc;
+    public CartaInput(Carta carta, Viewport viewport, float ancho, float alto, HiloCliente hc) {
         this.cartaParaMover = carta;
         this.viewport = viewport;
         this.cartaAncho = ancho;
         this.cartaAlto = alto;
+        this.hc = hc;
     }
 
     public void setZonaJuego(ZonaJuego zona) {
@@ -117,6 +120,8 @@ public class CartaInput implements InputProcessor {
                 cartaJugada = true;
 
                 System.out.println("Carta jugada: " + cartaParaMover.getNombre());
+                hc.enviarMensaje("CARTA_JUGADA:" + cartaParaMover.getValor() +
+                        ":" + cartaParaMover.getPalo().toString());
             } else {
                 // La carta NO está en la zona → volver a posición original
                 cartaParaMover.updateLimites(
