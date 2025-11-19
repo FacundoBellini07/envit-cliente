@@ -1,8 +1,9 @@
 package juego.red;
 
+import com.badlogic.gdx.Game;
+import juego.elementos.EstadoTurno;
 import juego.elementos.Palo;
-import juego.utilidades.Global;
-import juego.interfaces.EventoRedListener;
+import juego.interfaces.GameController;
 import java.io.IOException;
 import java.net.*;
 
@@ -13,20 +14,17 @@ public class HiloCliente extends Thread {
     private int puerto = 30243;
     private boolean fin = false;
 
-    private EventoRedListener listener;
+    private GameController listener;
 
-    public HiloCliente() {
+    public HiloCliente(GameController listener) {
         try {
+            this.listener = listener;
             ipserver = InetAddress.getByName("255.255.255.255");
             conexion = new DatagramSocket();
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
         }
         enviarMensaje("Conexion");
-    }
-
-    public void setEventoListener(EventoRedListener listener) {
-        this.listener = listener;
     }
 
     public void enviarMensaje(String mensaje) {
@@ -62,11 +60,13 @@ public class HiloCliente extends Thread {
         }
         else if(mensaje.startsWith("ID:")){
             mensaje = mensaje.replace("ID:", "");
-            Global.idJugadorLocal = Integer.parseInt(mensaje);
-            System.out.println("ID asignado por el servidor: " + Global.idJugadorLocal);
+            listener.onConectado(Integer.parseInt(mensaje));
+            System.out.println("ID asignado por el servidor: " + Integer.parseInt(mensaje));
         }
         else if (mensaje.equals("Empieza")) {
-            Global.empieza = true;
+            if (listener != null) {
+                listener.startGame();
+            }
         }
         else if (mensaje.startsWith("ESTADO:")) {
             procesarEstadoPartida(mensaje);
@@ -78,7 +78,7 @@ public class HiloCliente extends Thread {
         // ✅ NUEVO: Procesar truco del rival
         else if (mensaje.equals("TRUCO_RIVAL")) {
             if (listener != null) {
-                listener.onTrucoRivalRecibido();
+                listener.onTrucoRival();
             }
         }
     }
@@ -87,14 +87,8 @@ public class HiloCliente extends Thread {
         mensaje = mensaje.replace("ESTADO:", "");
         String[] partes = mensaje.split(":");
 
-        Global.manoActual = Integer.parseInt(partes[0]);
-        Global.puntosJ1 = Integer.parseInt(partes[1]);
-        Global.puntosJ2 = Integer.parseInt(partes[2]);
-        Global.estadoTurno = Global.EstadoTurno.valueOf(partes[3]);
+        listener.onEstadoActualizado(Integer.parseInt(partes[0]),Integer.parseInt(partes[1]),Integer.parseInt(partes[2]), EstadoTurno.valueOf(partes[3]));
 
-
-        System.out.println("[CLIENTE] Estado actualizado: Mano=" + Global.manoActual +
-                " P1=" + Global.puntosJ1 + " P2=" + Global.puntosJ2 + " Turno=" + Global.estadoTurno);
     }
 
     private void procesarCartaRival(String mensaje) {
@@ -104,10 +98,8 @@ public class HiloCliente extends Thread {
             try {
                 int valor = Integer.parseInt(partes[1]);
                 Palo palo = Palo.valueOf(partes[2]);
+                listener.onCartaRival(valor, palo);
 
-                if (listener != null) {
-                    listener.onCartaRivalRecibida(valor, palo);
-                }
 
                 System.out.println("[CLIENTE] Rival jugó: " + valor + " de " + palo);
             } catch (Exception e) {

@@ -4,13 +4,19 @@ import juego.elementos.Carta;
 
 public class Jugador {
     private String nombre;
+    private int puntos;
     private Carta mano[] = new Carta[3];
     private int cantCartas = 0;
+    private int id;
 
-
+    public Jugador() {
+        this.puntos = 0;
+        this.nombre = "Jugador";
+    }
 
     public Jugador(String nombre) {
         this.nombre = nombre;
+        this.puntos = 0;
     }
 
     public String getNombre() {
@@ -25,6 +31,13 @@ public class Jugador {
         return mano;
     }
 
+    public int getPuntos() {
+        return puntos;
+    }
+
+    public void sumarPuntos(int cantidad) {
+        this.puntos += cantidad;
+    }
 
     public void agregarCarta(Carta c){
         if (cantCartas < mano.length) {
@@ -40,6 +53,7 @@ public class Jugador {
         }
         cantCartas = 0;
     }
+
 
 
 }

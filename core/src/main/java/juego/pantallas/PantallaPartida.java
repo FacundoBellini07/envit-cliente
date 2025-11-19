@@ -13,14 +13,14 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import juego.elementos.*;
+import juego.interfaces.GameController;
 import juego.personajes.Jugador;
 import juego.personajes.RivalBot;
 import juego.red.HiloCliente;
-import juego.utilidades.Global;
 
 import java.util.ArrayList;
 
-public class PantallaPartida implements Screen {
+public class PantallaPartida implements Screen, GameController {
 
     private Game game;
     private Mazo mazo;
@@ -55,14 +55,14 @@ public class PantallaPartida implements Screen {
 
     private final float CARTA_ANCHO = WORLD_WIDTH * CARTA_PROPORCION_ANCHO;
     private final float CARTA_ALTO = CARTA_ANCHO * CARTA_RELACION_ASPECTO;
-
+    private boolean empieza = false;
     private PantallaFinal pantallaFinal;
 
     private BotonTruco botonTruco;
 
     private boolean debeVolverAlMenu = false;
     private HiloCliente hc;
-
+    private int mano = 0;
     
     public PantallaPartida(Game game) {
         this.game = game;
@@ -79,7 +79,7 @@ public class PantallaPartida implements Screen {
 
     @Override
     public void show() {
-        hc = new HiloCliente();
+        hc = new HiloCliente(this);
         hc.start();
         fondoPartida = new Texture(Gdx.files.internal("fondos/fondoPartida.png"));
         mazoSprite = new Texture(Gdx.files.internal("sprites/mazo_sprite.png"));
@@ -147,7 +147,7 @@ public class PantallaPartida implements Screen {
         );
 
         partida.inicializar(zonaJuegoJugador, zonaJuegoRival, rivalBot,
-                jugadores.get(0), jugadores.get(1));
+                jugadores.get(0), jugadores.get(1), mano);
 
         rivalBot.setPartida(partida);
 
@@ -184,7 +184,7 @@ public class PantallaPartida implements Screen {
     @Override
     public void render(float delta) {
 
-        if(!Global.empieza){
+        if(!empieza){
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             hud.dibujarMensajeCentral(batch, "ESPERANDO RIVAL...", Color.WHITE);
@@ -315,6 +315,26 @@ public class PantallaPartida implements Screen {
 
     private void volverAlMenu() {
         debeVolverAlMenu = true;
+    }
+
+    @Override
+    public void startGame() {
+        this.empieza = true;
+    }
+    public void onConectado(int id){
+
+    }
+    public void onInicioPartida(){
+
+    }
+    public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno){
+
+    }
+    public void onCartaRival(int valor, Palo palo){
+
+    }
+    public void onTrucoRival(){
+
     }
 
     @Override
