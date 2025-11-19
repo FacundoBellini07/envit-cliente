@@ -103,6 +103,10 @@ public class ZonaJuego {
         return cartasJugadas;
     }
 
+    public Rectangle getLimites() {
+        return limites;
+    }
+
     public int getCantidadCartas() {
         return cartasJugadas.size();
     }

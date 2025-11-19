@@ -16,6 +16,7 @@ import juego.elementos.*;
 import juego.interfaces.GameController;
 import juego.personajes.Jugador;
 import juego.personajes.RivalBot;
+import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
 
 import java.util.ArrayList;
@@ -63,10 +64,15 @@ public class PantallaPartida implements Screen, GameController {
     private boolean debeVolverAlMenu = false;
     private HiloCliente hc;
     private int mano = 0;
-    
+
+    private int miID = -1;
+    private TipoJugador miRol;
+    private int quienEmpieza;
+
     public PantallaPartida(Game game) {
         this.game = game;
         this.crearJugadores();
+        partida = new Partida();
     }
 
     private void crearJugadores() {
@@ -85,7 +91,6 @@ public class PantallaPartida implements Screen, GameController {
         mazoSprite = new Texture(Gdx.files.internal("sprites/mazo_sprite.png"));
         dorsoCartaSprite = new Texture(Gdx.files.internal("sprites/dorso.png"));
         mazo = new Mazo();
-        partida = new Partida();
         camera = new OrthographicCamera();
         viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         viewport.apply();
@@ -146,8 +151,6 @@ public class PantallaPartida implements Screen, GameController {
                 manoManager
         );
 
-        partida.inicializar(zonaJuegoJugador, zonaJuegoRival, rivalBot,
-                jugadores.get(0), jugadores.get(1), mano);
 
         rivalBot.setPartida(partida);
 
@@ -244,7 +247,7 @@ public class PantallaPartida implements Screen, GameController {
 
             // 6. DIBUJAR HUD
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
-            hud.render(batch, partida.getManoActual(), partida.esTurnoJugador(),
+            hud.render(batch, partida.getManoActual(), partida.esMiTurnoLocal(),
                     partida.isTrucoActivoEnManoActual(), partida.getManoTrucoUsada());
         }
     }
@@ -254,11 +257,11 @@ public class PantallaPartida implements Screen, GameController {
     public void update(float delta) {
         animacion.update(delta);
         partida.update(delta);
-        if (partida.esTurnoJugador()) {
+        if (partida.esMiTurnoLocal()) {
             // AQUÍ: Enviar al servidor la carta jugada
             // hc.enviarMensaje("CARTA_JUGADA:" + numeroCarta + ":" + palo);
         }
-        manoManager.setEsMiTurno(partida.esTurnoJugador());
+        manoManager.setEsMiTurno(partida.esMiTurnoLocal());
 
         if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
             botonTruco.update(delta);
@@ -305,7 +308,7 @@ public class PantallaPartida implements Screen, GameController {
             manoManager.inicializarMano();
             manoRivalRenderer.inicializarPosiciones();
             animacion.iniciarAnimacionReparto();
-            if (!partida.esTurnoJugador() && rivalBot != null) {
+            if (!partida.esMiTurnoLocal() && rivalBot != null) {
                 rivalBot.activarTurno();
             }
             inicioRonda = false;
@@ -318,20 +321,64 @@ public class PantallaPartida implements Screen, GameController {
     }
 
     @Override
-    public void startGame() {
+    public void startGame(int idMano) {
         this.empieza = true;
+        this.quienEmpieza = idMano;
+        TipoJugador tipoMano = (idMano == 0) ? TipoJugador.JUGADOR_1 : TipoJugador.JUGADOR_2;
+
+        // Reinicializamos la partida con el dato correcto del servidor
+        partida.inicializar(zonaJuegoJugador, zonaJuegoRival, rivalBot,
+                jugadores.get(0), jugadores.get(1), mano, miRol,tipoMano);
+
+        System.out.println("Sincronizado: Empieza el jugador ID " + idMano);
+
     }
     public void onConectado(int id){
+        this.miID = id;
+
+        if (miID == 0) {
+            // Yo soy el Jugador 1
+            jugadores.add(new Jugador("Tú (Jugador 1)"));
+            jugadores.add(new Jugador("Rival (Jugador 2)"));
+            this.miRol = TipoJugador.JUGADOR_1; // Asignar el rol
+        } else {
+            // Yo soy el Jugador 2
+            jugadores.add(new Jugador("Rival (Jugador 1)"));
+            jugadores.add(new Jugador("Tú (Jugador 2)"));
+            this.miRol = TipoJugador.JUGADOR_2; // Asignar el rol
+        }
 
     }
-    public void onInicioPartida(){
 
-    }
-    public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno){
+    public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano){
+        partida.actualizarEstado(mano, p1, p2, turno, jugadorMano);
+        System.out.println("[CLIENTE] Estado actualizado recibido: mano=" + mano + ", p1=" + p1 + ", p2=" + p2 + ", turno=" + turno + ", jugadorMano=" + jugadorMano);
 
     }
     public void onCartaRival(int valor, Palo palo){
+        Carta cartaRival = new Carta(valor, palo);
 
+        if (zonaJuegoRival != null) {
+            // Obtenemos los límites de la zona de juego del rival
+            com.badlogic.gdx.math.Rectangle limitesZona = zonaJuegoRival.getLimites();
+
+            // 2. Calcular la posición (ejemplo: centrado en la zona de juego del rival)
+            float xCarta = limitesZona.x + (limitesZona.width - CARTA_ANCHO) / 2f;
+            float yCarta = limitesZona.y + (limitesZona.height - CARTA_ALTO) / 2f;
+
+            // **OPCIONAL:** Si quieres que se desplacen un poco como en el truco real
+            // int numCartas = zonaJuegoRival.getCantidadCartas();
+            // float desplazamientoX = 0.2f * CARTA_ANCHO * numCartas;
+            // xCarta += desplazamientoX;
+
+            // **PASO CRUCIAL:** Asignar los límites CORRECTOS a la carta.
+            cartaRival.updateLimites(xCarta, yCarta, CARTA_ANCHO, CARTA_ALTO);
+
+            // 3. Agregarla a la zona de juego del rival.
+            zonaJuegoRival.agregarCarta(cartaRival);
+
+            System.out.println("[PANTALLA] Carta del rival agregada y dimensionada.");
+        }
     }
     public void onTrucoRival(){
 

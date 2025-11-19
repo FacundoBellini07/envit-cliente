@@ -121,7 +121,7 @@ public class CartaInput implements InputProcessor {
 
                 System.out.println("Carta jugada: " + cartaParaMover.getNombre());
                 hc.enviarMensaje("CARTA_JUGADA:" + cartaParaMover.getValor() +
-                        ":" + cartaParaMover.getPalo().toString());
+                        ":" + cartaParaMover.getPalo().name());
             } else {
                 // La carta NO está en la zona → volver a posición original
                 cartaParaMover.updateLimites(

@@ -23,9 +23,6 @@ public class Jugador {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
 
     public Carta[] getMano() {
         return mano;
@@ -54,6 +51,8 @@ public class Jugador {
         cantCartas = 0;
     }
 
-
+    public void setPuntos(int puntos) {
+        this.puntos = puntos;
+    }
 
 }

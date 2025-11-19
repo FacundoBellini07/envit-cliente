@@ -11,11 +11,15 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.pantallas.Partida;
+import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
 
 /**
- * Botón visual para cantar Truco en el juego
- * ✅ ACTUALIZADO: Solo disponible para quien tira primero en cada mano
+ * Botón visual para cantar Truco en el juego.
+ * Solo disponible si:
+ * 1. Es el primer turno en la mano (nadie jugó carta).
+ * 2. El jugador local es el "Mano" (el que empieza a tirar).
+ * 3. El Truco no ha sido cantado/aceptado aún en la ronda.
  */
 public class BotonTruco {
 
@@ -70,10 +74,11 @@ public class BotonTruco {
      */
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
 
-        boolean trucoDisponible = !partida.isTrucoUsado()
-                && partida.esPrimerTurnoEnMano()
-                && partida.esTurnoJugador()
-                && partida.jugador1EmpiezaEstaMano();
+        // --- LÓGICA DE DISPONIBILIDAD CORREGIDA ---
+        boolean trucoDisponible = !partida.isTrucoUsado()           // Verifica si se usó Truco en la ronda
+                && partida.esPrimerTurnoEnMano()                   // Verifica si nadie jugó carta en la mano actual
+                && partida.esMiTurnoLocal()                         // Verifica si es mi turno
+                && partida.soyJugadorMano();                       // Verifica si soy el "Mano" (el pie)
 
         Color colorBtn;
         float escala = 1.0f;
@@ -137,6 +142,7 @@ public class BotonTruco {
 
         font.draw(batch, textoTruco, textX, textY);
 
+        // Indicador de valor de Truco activo
         if (partida.isTrucoActivoEnManoActual()) {
             font.getData().setScale(0.8f);
             font.setColor(colorIndicador);
@@ -152,10 +158,11 @@ public class BotonTruco {
 
     private void actualizarHover() {
 
+        // --- LÓGICA DE DISPONIBILIDAD CORREGIDA ---
         boolean trucoDisponible = !partida.isTrucoUsado()
                 && partida.esPrimerTurnoEnMano()
-                && partida.esTurnoJugador()
-                && partida.jugador1EmpiezaEstaMano();
+                && partida.esMiTurnoLocal()
+                && partida.soyJugadorMano();
 
         Vector2 mouse = viewport.unproject(
                 new Vector2(Gdx.input.getX(), Gdx.input.getY())
@@ -181,13 +188,18 @@ public class BotonTruco {
     }
 
     private boolean intentarCantarTruco() {
-        boolean exito = partida.cantarTruco(Partida.TipoJugador.JUGADOR_1);
+        // Llamamos al método local en Partida que valida las condiciones de la UI
+        // y actualiza la bandera temporalmente.
+        boolean exito = partida.cantarTruco(partida.getJugadorLocal()); // Pasamos mi TipoJugador
 
         if (exito) {
             System.out.println("¡TRUCO cantado por el jugador!");
+            // IMPORTANTE: Enviamos el mensaje al servidor para que él valide y notifique a todos
             hc.enviarMensaje("TRUCO");
         }
 
         return exito;
     }
+
+    // Asumo que agregaste getJugadorLocal() en Partida.java para obtener mi rol.
 }

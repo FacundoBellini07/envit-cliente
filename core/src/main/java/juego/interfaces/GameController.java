@@ -2,13 +2,13 @@ package juego.interfaces;
 
 import juego.elementos.EstadoTurno;
 import juego.elementos.Palo;
+import juego.personajes.TipoJugador;
 
 public interface GameController {
     void onConectado(int id);
-    void onInicioPartida();
-    void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno);
+    void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano);
     void onCartaRival(int valor, Palo palo);
     void onTrucoRival();
-    void startGame();
+    void startGame(int idMano);
 }
 

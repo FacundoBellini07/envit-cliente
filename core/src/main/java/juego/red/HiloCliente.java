@@ -4,6 +4,8 @@ import com.badlogic.gdx.Game;
 import juego.elementos.EstadoTurno;
 import juego.elementos.Palo;
 import juego.interfaces.GameController;
+import juego.personajes.TipoJugador;
+
 import java.io.IOException;
 import java.net.*;
 
@@ -63,19 +65,20 @@ public class HiloCliente extends Thread {
             listener.onConectado(Integer.parseInt(mensaje));
             System.out.println("ID asignado por el servidor: " + Integer.parseInt(mensaje));
         }
-        else if (mensaje.equals("Empieza")) {
+        else if (mensaje.startsWith("EMPIEZA:")) {
+            String idStr = mensaje.split(":")[1]; // Obtener el número después de los dos puntos
+            int idMano = Integer.parseInt(idStr);
+
             if (listener != null) {
-                listener.startGame();
+                listener.startGame(idMano); // <-- Pasamos el ID al listener
             }
         }
         else if (mensaje.startsWith("ESTADO:")) {
             procesarEstadoPartida(mensaje);
         }
-        // ✅ NUEVO: Procesar carta del rival
         else if (mensaje.startsWith("CARTA_RIVAL:")) {
             procesarCartaRival(mensaje);
         }
-        // ✅ NUEVO: Procesar truco del rival
         else if (mensaje.equals("TRUCO_RIVAL")) {
             if (listener != null) {
                 listener.onTrucoRival();
@@ -87,7 +90,15 @@ public class HiloCliente extends Thread {
         mensaje = mensaje.replace("ESTADO:", "");
         String[] partes = mensaje.split(":");
 
-        listener.onEstadoActualizado(Integer.parseInt(partes[0]),Integer.parseInt(partes[1]),Integer.parseInt(partes[2]), EstadoTurno.valueOf(partes[3]));
+        TipoJugador jugadorMano = TipoJugador.valueOf(partes[4]);
+
+        listener.onEstadoActualizado(
+                Integer.parseInt(partes[0]),
+                Integer.parseInt(partes[1]),
+                Integer.parseInt(partes[2]),
+                EstadoTurno.valueOf(partes[3]),
+                jugadorMano // <-- Pasamos el nuevo valor
+        );
 
     }
 
