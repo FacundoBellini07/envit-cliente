@@ -3,6 +3,18 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/envit-cliente.iml" filepath="$PROJECT_DIR$/.idea/envit-cliente.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.iml" filepath="$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.iml" filepath="$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core/assets/envit-cliente.core.assets.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core/envit-cliente.core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.main.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.test.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/envit-cliente.desktop.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.iml" filepath="$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.main.iml" filepath="$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.test.iml" filepath="$PROJECT_DIR$/.idea/modules/lwjgl3/envit-cliente.lwjgl3.test.iml" />
     </modules>
   </component>
 </project>

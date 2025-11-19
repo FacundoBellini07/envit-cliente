@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: space.earlygrey:shapedrawer:2.6.0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="space.earlygrey" artifactId="shapedrawer" version="2.6.0" baseVersion="2.6.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/space.earlygrey/shapedrawer/2.6.0/a37c5a0e481af62679c3270936b1a43119588f85/shapedrawer-2.6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/space.earlygrey/shapedrawer/2.6.0/c6ad4b42e2f78da8c96fde3f7268c4f19b4c4e25/shapedrawer-2.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
