@@ -10,7 +10,6 @@ import juego.personajes.TipoJugador;
 
 public class Hud {
 
-    private TipoJugador miRol;
     private BitmapFont font;
     private Jugador jugador1;
     private Jugador jugador2;
@@ -27,13 +26,12 @@ public class Hud {
     // Posiciones
     private float margen = 20f;
 
-    public Hud(BitmapFont font, Jugador jugador1, Jugador jugador2, float worldWidth, float worldHeight, TipoJugador miRol) {
+    public Hud(BitmapFont font, Jugador jugador1, Jugador jugador2, float worldWidth, float worldHeight) {
         this.font = font;
         this.jugador1 = jugador1;
         this.jugador2 = jugador2;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
-        this.miRol = miRol;
     }
 
     /**
@@ -45,14 +43,8 @@ public class Hud {
                        boolean trucoActivo, int manoTruco) {
         batch.begin();
 
-        if(miRol == TipoJugador.JUGADOR_1){
-            dibujarPuntosJugador(batch, jugador1.getPuntos());
-            dibujarPuntosRival(batch, jugador2.getPuntos());
-        } else {
-            dibujarPuntosRival(batch, jugador2.getPuntos());
-            dibujarPuntosJugador(batch, jugador1.getPuntos());
-        }
-
+        dibujarPuntosJugador(batch, jugador1.getPuntos());
+        dibujarPuntosRival(batch, jugador2.getPuntos());
         // Información de mano actual (arriba centro)
         dibujarInfoMano(batch, manoActual);
 

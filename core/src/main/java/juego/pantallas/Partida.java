@@ -173,12 +173,19 @@ public class Partida {
         System.out.println("[CLIENTE] Truco actualizado: usado=" + usado + ", mano=" + manoTruco);
     }
 
-    public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano) {
+    public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano, TipoJugador miRol) {
         this.manoActual = mano;
-        this.jugador1.setPuntos(p1);
-        this.jugador2.setPuntos(p2);
         this.estadoActual = nuevoTurno;
         this.jugadorMano = jugadorMano;
+
+        if (this.jugadorLocal == TipoJugador.JUGADOR_1) {
+
+            this.jugador1.setPuntos(p1);
+            this.jugador2.setPuntos(p2);
+        } else {
+            this.jugador1.setPuntos(p2);
+            this.jugador2.setPuntos(p1);
+        }
 
         System.out.println("[PARTIDA CLIENTE] Estado forzado: mano=" + mano +
                 ", turno=" + nuevoTurno + ", jugadorMano=" + jugadorMano);

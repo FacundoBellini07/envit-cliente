@@ -106,7 +106,7 @@ public class PantallaPartida implements Screen, GameController {
 
         font = new BitmapFont();
         font.getData().setScale(1.2f);
-        hud = new Hud(font, jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT, miRol);
+        hud = new Hud(font, jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
 
         // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
@@ -257,12 +257,12 @@ public class PantallaPartida implements Screen, GameController {
             batch.begin();
             manoRivalRenderer.render(batch);
             batch.end();
-            manoManager.render();
 
-            // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
+            manoManager.render();
             zonaJuegoJugador.renderCartas();
             zonaJuegoRival.renderCartas();
-            // 5. DIBUJAR BOTÓN DE TRUCO
+
+
             botonTruco.render(batch, shapeRenderer);
 
             // 6. DIBUJAR HUD
@@ -381,8 +381,9 @@ public class PantallaPartida implements Screen, GameController {
     }
 
     public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano){
-        partida.actualizarEstado(mano, p1, p2, turno, jugadorMano);
+        partida.actualizarEstado(mano, p1, p2, turno, jugadorMano, miRol);
         System.out.println("[CLIENTE] Estado actualizado recibido: mano=" + mano + ", p1=" + p1 + ", p2=" + p2 + ", turno=" + turno + ", jugadorMano=" + jugadorMano);
+
 
     }
     public void onCartaRival(int valor, Palo palo){
