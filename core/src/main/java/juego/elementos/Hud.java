@@ -2,15 +2,18 @@ package juego.elementos;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import juego.personajes.Jugador;
+import juego.personajes.TipoJugador;
 
 public class Hud {
 
+    private TipoJugador miRol;
     private BitmapFont font;
-    private Jugador jugador;
-    private Jugador rival;
+    private Jugador jugador1;
+    private Jugador jugador2;
 
     private float worldWidth;
     private float worldHeight;
@@ -24,45 +27,31 @@ public class Hud {
     // Posiciones
     private float margen = 20f;
 
-    public Hud(BitmapFont font, Jugador jugador, Jugador rival, float worldWidth, float worldHeight) {
+    public Hud(BitmapFont font, Jugador jugador1, Jugador jugador2, float worldWidth, float worldHeight, TipoJugador miRol) {
         this.font = font;
-        this.jugador = jugador;
-        this.rival = rival;
+        this.jugador1 = jugador1;
+        this.jugador2 = jugador2;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
+        this.miRol = miRol;
     }
 
     /**
      * Dibuja el HUD completo
      */
-    public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador) {
-        batch.begin();
-
-        // Panel de puntos del jugador (abajo izquierda)
-        dibujarPuntosJugador(batch);
-
-        // Panel de puntos del rival (arriba izquierda)
-        dibujarPuntosRival(batch);
-
-        // Información de mano actual (arriba centro)
-        dibujarInfoMano(batch, manoActual);
-
-        // Indicador de turno (centro derecha)
-        dibujarIndicadorTurno(batch, esTurnoJugador);
-
-        batch.end();
-    }
 
 
     public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador,
                        boolean trucoActivo, int manoTruco) {
         batch.begin();
 
-        // Panel de puntos del jugador (abajo izquierda)
-        dibujarPuntosJugador(batch);
-
-        // Panel de puntos del rival (arriba izquierda)
-        dibujarPuntosRival(batch);
+        if(miRol == TipoJugador.JUGADOR_1){
+            dibujarPuntosJugador(batch, jugador1.getPuntos());
+            dibujarPuntosRival(batch, jugador2.getPuntos());
+        } else {
+            dibujarPuntosRival(batch, jugador2.getPuntos());
+            dibujarPuntosJugador(batch, jugador1.getPuntos());
+        }
 
         // Información de mano actual (arriba centro)
         dibujarInfoMano(batch, manoActual);
@@ -77,11 +66,11 @@ public class Hud {
         batch.end();
     }
 
-    private void dibujarPuntosJugador(SpriteBatch batch) {
+    private void dibujarPuntosJugador(SpriteBatch batch, int puntos) {
         font.setColor(colorJugador);
         font.getData().setScale(1.5f);
 
-        String textoJugador = "TU: " + jugador.getPuntos() + " pts";
+        String textoJugador = "TU: " + puntos + " pts";
 
         float x = margen;
         float y = margen + 30;
@@ -89,11 +78,11 @@ public class Hud {
         font.draw(batch, textoJugador, x, y);
     }
 
-    private void dibujarPuntosRival(SpriteBatch batch) {
+    private void dibujarPuntosRival(SpriteBatch batch, int puntos) {
         font.setColor(colorRival);
         font.getData().setScale(1.5f);
 
-        String textoRival = "RIVAL: " + rival.getPuntos() + " pts";
+        String textoRival = "RIVAL: " + puntos + " pts";
 
         float x = margen;
         float y = worldHeight - margen;

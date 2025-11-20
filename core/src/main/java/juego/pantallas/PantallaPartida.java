@@ -105,7 +105,7 @@ public class PantallaPartida implements Screen, GameController {
 
         font = new BitmapFont();
         font.getData().setScale(1.2f);
-        hud = new Hud(font, jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
+        hud = new Hud(font, jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT, miRol);
 
         // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
@@ -121,8 +121,6 @@ public class PantallaPartida implements Screen, GameController {
         zonaJuegoRival = new ZonaJuego(zonaRivalX, zonaRivalY, zonaAncho, zonaAlto);
         zonaJuegoRival.setCartaRenderer(cartaRenderer);
 
-        // ✅ IMPORTANTE: ManoManager SIEMPRE maneja jugadores.get(0) (YO)
-        // No importa si soy J1 o J2, ManoManager siempre dibuja MIS cartas abajo
         manoManager = new ManoManager(
                 jugadores.get(0),  // Siempre el índice 0 es "yo"
                 cartaRenderer,
@@ -135,9 +133,8 @@ public class PantallaPartida implements Screen, GameController {
         );
         manoManager.setZonaJuego(zonaJuegoJugador);
 
-        // ✅ IMPORTANTE: ManoRivalRenderer SIEMPRE maneja jugadores.get(1) (RIVAL)
         manoRivalRenderer = new ManoRivalRenderer(
-                jugadores.get(1),  // Siempre el índice 1 es "rival"
+                jugadores.get(1),
                 cartaRenderer,
                 dorsoCartaSprite,
                 zonaJuegoRival,
@@ -237,7 +234,7 @@ public class PantallaPartida implements Screen, GameController {
             this.batch.begin();
             manoRivalRenderer.render(batch);
             this.batch.end();
-            manoRivalRenderer.render(batch);
+
             manoManager.render();
 
             // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
@@ -293,7 +290,6 @@ public class PantallaPartida implements Screen, GameController {
 
         // ✅ Reinicializar cuando tengamos 3 cartas
         if (inicioRonda) {
-            // Verificar MIS cartas (jugadores.get(0) siempre soy YO)
             Carta[] miMano = jugadores.get(0).getMano();
 
             int cartasDisponibles = 0;
