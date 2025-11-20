@@ -255,16 +255,16 @@ public class PantallaPartida implements Screen, GameController {
         }
     }
 
-
-
     public void update(float delta) {
         animacion.update(delta);
+
         if (mostrarMensajeTrucoRival) {
             tiempoMensajeTrucoRival -= delta;
             if (tiempoMensajeTrucoRival <= 0) {
                 mostrarMensajeTrucoRival = false;
             }
         }
+
         manoManager.setEsMiTurno(partida.esMiTurnoLocal());
 
         if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
@@ -280,41 +280,28 @@ public class PantallaPartida implements Screen, GameController {
             return;
         }
 
-        // Verificar si la partida terminó
         if (partida.partidaTerminada() && !pantallaFinal.isActiva()) {
-
             pantallaFinal.activar(
                     partida.getGanador(),
                     jugadores.get(0),
                     jugadores.get(1)
             );
 
-            // Desactivar input del jugador
             Gdx.input.setInputProcessor(null);
-
             System.out.println("¡PARTIDA TERMINADA! Ganador: " + partida.getGanador().getNombre());
             return;
         }
 
-        if (partida.rondaTerminada()) {
-            inicioRonda = true;
-            partida.nuevaRonda();
-        }
-
-        if (inicioRonda) {
-            zonaJuegoJugador.limpiar();
-            zonaJuegoRival.limpiar();
-            jugadores.get(0).limpiarMazo();
-            jugadores.get(1).limpiarMazo();
-
-            partida.repartirCartas(jugadores.get(0), jugadores.get(1));
-
+        // ✅ NUEVO: Reinicializar la mano cuando sea necesario
+        if (inicioRonda && jugadores.get(0).getMano()[0] != null) {
             manoManager.inicializarMano();
             manoRivalRenderer.inicializarPosiciones();
             animacion.iniciarAnimacionReparto();
+
             if (!partida.esMiTurnoLocal() && rivalBot != null) {
                 rivalBot.activarTurno();
             }
+
             inicioRonda = false;
         }
     }
@@ -380,6 +367,37 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoRival(){
         this.mostrarMensajeTrucoRival = true;
         this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
+    }
+
+    public void onCartaRecibida(int valor, Palo palo) {
+        // Crear la carta y agregarla a la mano del jugador local
+        Carta carta = new Carta(valor, palo);
+
+        if (miRol == TipoJugador.JUGADOR_1) {
+            jugadores.get(0).agregarCarta(carta);
+        } else {
+            jugadores.get(1).agregarCarta(carta);
+        }
+
+        System.out.println("[PANTALLA] Carta agregada a mi mano: " + valor + " de " + palo);
+    }
+
+    public void onNuevaRonda() {
+        System.out.println("[PANTALLA] Nueva ronda iniciada por el servidor");
+
+        // Limpiar zonas de juego
+        if (zonaJuegoJugador != null) zonaJuegoJugador.limpiar();
+        if (zonaJuegoRival != null) zonaJuegoRival.limpiar();
+
+        // Limpiar las manos de los jugadores
+        jugadores.get(0).limpiarMazo();
+        jugadores.get(1).limpiarMazo();
+
+        // Reinicializar el manager de mano cuando lleguen las nuevas cartas
+        // (esto se hará automáticamente con onCartaRecibida)
+
+        // Marcar que necesitamos reinicializar
+        inicioRonda = true;
     }
 
     @Override

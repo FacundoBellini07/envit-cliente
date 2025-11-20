@@ -10,5 +10,8 @@ public interface GameController {
     void onCartaRival(int valor, Palo palo);
     void onTrucoRival();
     void startGame(int idMano);
-}
 
+    // ✅ NUEVOS MÉTODOS
+    void onCartaRecibida(int valor, Palo palo);  // Recibir carta del servidor
+    void onNuevaRonda();                          // Nueva ronda iniciada
+}

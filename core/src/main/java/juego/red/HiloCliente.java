@@ -1,6 +1,5 @@
 package juego.red;
 
-import com.badlogic.gdx.Game;
 import juego.elementos.EstadoTurno;
 import juego.elementos.Palo;
 import juego.interfaces.GameController;
@@ -57,21 +56,14 @@ public class HiloCliente extends Thread {
         String mensaje = (new String(dp.getData())).trim();
 
         if (mensaje.equals("OK")) {
-            System.out.println("Conectado al servidor");
+            System.out.println("[CLIENTE] Conectado al servidor");
             ipserver = dp.getAddress();
         }
-        else if(mensaje.startsWith("ID:")){
-            mensaje = mensaje.replace("ID:", "");
-            listener.onConectado(Integer.parseInt(mensaje));
-            System.out.println("ID asignado por el servidor: " + Integer.parseInt(mensaje));
+        else if (mensaje.startsWith("ID:")) {
+            procesarID(mensaje);
         }
         else if (mensaje.startsWith("EMPIEZA:")) {
-            String idStr = mensaje.split(":")[1]; // Obtener el número después de los dos puntos
-            int idMano = Integer.parseInt(idStr);
-
-            if (listener != null) {
-                listener.startGame(idMano); // <-- Pasamos el ID al listener
-            }
+            procesarEmpieza(mensaje);
         }
         else if (mensaje.startsWith("ESTADO:")) {
             procesarEstadoPartida(mensaje);
@@ -83,6 +75,29 @@ public class HiloCliente extends Thread {
             if (listener != null) {
                 listener.onTrucoRival();
             }
+        }
+        else if (mensaje.startsWith("CARTAS:")) {
+            procesarCartasRecibidas(mensaje);
+        }
+        else if (mensaje.equals("NUEVA_RONDA")) {
+            if (listener != null) {
+                listener.onNuevaRonda();
+            }
+        }
+    }
+
+    private void procesarID(String mensaje) {
+        mensaje = mensaje.replace("ID:", "");
+        listener.onConectado(Integer.parseInt(mensaje));
+        System.out.println("[CLIENTE] ID asignado por el servidor: " + mensaje);
+    }
+
+    private void procesarEmpieza(String mensaje) {
+        String idStr = mensaje.split(":")[1];
+        int idMano = Integer.parseInt(idStr);
+
+        if (listener != null) {
+            listener.startGame(idMano);
         }
     }
 
@@ -97,13 +112,11 @@ public class HiloCliente extends Thread {
                 Integer.parseInt(partes[1]),
                 Integer.parseInt(partes[2]),
                 EstadoTurno.valueOf(partes[3]),
-                jugadorMano // <-- Pasamos el nuevo valor
+                jugadorMano
         );
-
     }
 
     private void procesarCartaRival(String mensaje) {
-        // Formato: "CARTA_RIVAL:1:ESPADAS"
         String[] partes = mensaje.split(":");
         if (partes.length >= 3) {
             try {
@@ -111,10 +124,35 @@ public class HiloCliente extends Thread {
                 Palo palo = Palo.valueOf(partes[2]);
                 listener.onCartaRival(valor, palo);
 
-
                 System.out.println("[CLIENTE] Rival jugó: " + valor + " de " + palo);
             } catch (Exception e) {
                 System.err.println("[CLIENTE] Error procesando carta rival: " + e.getMessage());
+            }
+        }
+    }
+
+    private void procesarCartasRecibidas(String mensaje) {
+        // Formato: "CARTAS:1:ESPADAS,7:ORO,3:BASTO"
+        mensaje = mensaje.replace("CARTAS:", "");
+        String[] cartas = mensaje.split(",");
+
+        System.out.println("[CLIENTE] Recibidas " + cartas.length + " cartas del servidor");
+
+        for (String cartaStr : cartas) {
+            String[] partes = cartaStr.split(":");
+            if (partes.length >= 2) {
+                try {
+                    int valor = Integer.parseInt(partes[0]);
+                    Palo palo = Palo.valueOf(partes[1]);
+
+                    if (listener != null) {
+                        listener.onCartaRecibida(valor, palo);
+                    }
+
+                    System.out.println("[CLIENTE] Carta recibida: " + valor + " de " + palo);
+                } catch (Exception e) {
+                    System.err.println("[CLIENTE] Error procesando carta: " + e.getMessage());
+                }
             }
         }
     }
