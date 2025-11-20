@@ -11,15 +11,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.pantallas.Partida;
-import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
 
 /**
  * Botón visual para cantar Truco en el juego.
  * ✅ CORREGIDO: Solo disponible si:
- * 1. Es el primer turno en la mano (nadie jugó carta).
+ * 1. Es el primer turno en la mana (nadie jugó carta).
  * 2. El jugador local es el "Mano" (el que empieza a tirar).
- * 3. El Truco no ha sido cantado/aceptado aún en la ronda.
+ * 3. El Truco no ha sido cantado aún en la ronda.
  */
 public class BotonTruco {
 
@@ -205,18 +204,14 @@ public class BotonTruco {
     private boolean intentarCantarTruco() {
         // Validación del lado del cliente
         if (!isTrucoDisponible()) {
-            System.out.println("No puedes cantar truco ahora");
+            System.out.println("[CLIENTE] No puedes cantar truco ahora");
             return false;
         }
 
-        // Marcar localmente (el servidor validará también)
-        boolean exito = partida.cantarTruco(partida.getJugadorLocal());
+        // ✅ NO marcar localmente, solo enviar al servidor
+        System.out.println("[CLIENTE] Enviando TRUCO al servidor...");
+        hc.enviarMensaje("TRUCO");
 
-        if (exito) {
-            System.out.println("¡TRUCO cantado! Enviando al servidor...");
-            hc.enviarMensaje("TRUCO");
-        }
-
-        return exito;
+        return true;
     }
 }

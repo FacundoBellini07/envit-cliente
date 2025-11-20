@@ -411,6 +411,12 @@ public class PantallaPartida implements Screen, GameController {
         }
     }
 
+    public void onTrucoActualizado(boolean trucoUsado, int manoTruco) {
+     if (partida != null) {
+         partida.actualizarTruco(trucoUsado, manoTruco);
+         System.out.println("[PANTALLA] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
+         }
+     }
 
     public void onNuevaRonda() {
         System.out.println("[PANTALLA] Nueva ronda iniciada por el servidor");

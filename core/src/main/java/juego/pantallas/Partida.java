@@ -23,7 +23,7 @@ public class Partida {
     private ZonaJuego zonaJugador2;
     private Jugador jugador1;
     private Jugador jugador2;
-    private RivalBot rivalBot; // Se mantiene por compatibilidad, aunque no decide en red
+    private RivalBot rivalBot;
 
     // Quién soy yo y quién tiene el turno
     private TipoJugador jugadorLocal;
@@ -37,13 +37,10 @@ public class Partida {
 
     // Constructor
     public Partida() {
-        // Creamos un mazo visual para las animaciones de reparto
         Mazo mazoOriginal = new Mazo();
         for (int i = 0; i < mazoOriginal.getCantCartas(); i++) {
             mazoRevuelto.add(mazoOriginal.getCarta(i));
         }
-        // En el cliente barajamos solo para que visualmente no salgan siempre las mismas
-        // al repartir, aunque las cartas reales las define el servidor luego.
         Collections.shuffle(mazoRevuelto);
     }
 
@@ -55,10 +52,8 @@ public class Partida {
         this.jugador2 = jug2;
         this.jugadorLocal = jugadorLocal;
 
-        // ASIGNADO POR EL SERVIDOR (Ya no es random)
         this.jugadorMano = jugadorQueEmpieza;
 
-        // Configuramos el estado inicial basado en quién empieza
         this.estadoActual = (jugadorMano == TipoJugador.JUGADOR_1)
                 ? EstadoTurno.ESPERANDO_JUGADOR_1
                 : EstadoTurno.ESPERANDO_JUGADOR_2;
@@ -94,7 +89,6 @@ public class Partida {
         return estadoActual == EstadoTurno.PARTIDA_TERMINADA;
     }
 
-    // Métodos para el HUD de Truco
     public boolean isTrucoActivoEnManoActual() {
         return trucoUsado && manoTrucoUsada == manoActual;
     }
@@ -102,23 +96,33 @@ public class Partida {
     public int getManoTrucoUsada() {
         return manoTrucoUsada;
     }
-    public boolean rondaTerminada() {
-        return false; // El servidor controla el fin de ronda
-    }
 
     public void nuevaRonda() {
-        // El servidor controla el reinicio
         if (zonaJugador1 != null) zonaJugador1.limpiar();
         if (zonaJugador2 != null) zonaJugador2.limpiar();
         this.manoActual = 0;
+
+        // ✅ IMPORTANTE: Resetear el truco al iniciar nueva ronda
+        this.trucoUsado = false;
+        this.manoTrucoUsada = -1;
+        this.jugadorQueCanto = null;
+
+        System.out.println("[CLIENTE] Nueva ronda - Truco reseteado");
     }
 
-    // Getters de estado puro
-    public EstadoTurno getEstadoActual() { return estadoActual; }
-    public boolean esTurnoJugador1() { return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_1; }
-    public boolean esTurnoJugador2() { return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_2; }
+    public EstadoTurno getEstadoActual() {
+        return estadoActual;
+    }
 
-    // El cliente puede llamar a esto para pintar el botón, pero la validez real la da el server
+    public boolean esTurnoJugador1() {
+        return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_1;
+    }
+
+    public boolean esTurnoJugador2() {
+        return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_2;
+    }
+
+    // ✅ CORREGIDO: El cliente NO marca el truco, solo valida si se puede cantar
     public boolean cantarTruco(TipoJugador jugador) {
         if (trucoUsado) {
             System.out.println("[CLIENTE] El truco ya fue cantado en esta ronda");
@@ -139,10 +143,10 @@ public class Partida {
             System.out.println("[CLIENTE] No es tu turno");
             return false;
         }
-        trucoUsado = true;
-        manoTrucoUsada = manoActual;
-        jugadorQueCanto = jugador;
 
+        // ✅ IMPORTANTE: NO marcar trucoUsado aquí
+        // El servidor lo validará y nos enviará la confirmación
+        System.out.println("[CLIENTE] Validación OK, esperando respuesta del servidor");
         return true;
     }
 
@@ -151,17 +155,22 @@ public class Partida {
     }
 
     public boolean esPrimerTurnoEnMano() {
-
         return zonaJugador1.getCantidadCartas() + zonaJugador2.getCantidadCartas() == 0;
     }
 
     public boolean soyJugadorMano() {
-        System.out.println(this.jugadorLocal == this.jugadorMano ? "SOY MANO JIJI" : "NO SOY MANO uy");
         return this.jugadorLocal == this.jugadorMano;
     }
 
     public TipoJugador getJugadorLocal(){
         return this.jugadorLocal;
+    }
+
+    // ✅ NUEVO: Método para actualizar el estado del truco desde el servidor
+    public void actualizarTruco(boolean usado, int manoTruco) {
+        this.trucoUsado = usado;
+        this.manoTrucoUsada = manoTruco;
+        System.out.println("[CLIENTE] Truco actualizado: usado=" + usado + ", mano=" + manoTruco);
     }
 
     public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano) {
@@ -174,6 +183,7 @@ public class Partida {
         System.out.println("[PARTIDA CLIENTE] Estado forzado: mano=" + mano +
                 ", turno=" + nuevoTurno + ", jugadorMano=" + jugadorMano);
     }
+
     public void setZonaJuegos(ZonaJuego zonaJug1, ZonaJuego zonaJug2) {
         this.zonaJugador1 = zonaJug1;
         this.zonaJugador2 = zonaJug2;

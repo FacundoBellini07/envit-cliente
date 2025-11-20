@@ -114,15 +114,28 @@ public class HiloCliente extends Thread {
         mensaje = mensaje.replace("ESTADO:", "");
         String[] partes = mensaje.split(":");
 
+        // Formato antiguo: mano:p1:p2:estadoTurno:jugadorMano
+        // Formato nuevo: mano:p1:p2:estadoTurno:jugadorMano:trucoUsado:manoTruco
+
         TipoJugador jugadorMano = TipoJugador.valueOf(partes[4]);
 
         listener.onEstadoActualizado(
-                Integer.parseInt(partes[0]),
-                Integer.parseInt(partes[1]),
-                Integer.parseInt(partes[2]),
-                EstadoTurno.valueOf(partes[3]),
-                jugadorMano
+                Integer.parseInt(partes[0]),  // mano
+                Integer.parseInt(partes[1]),  // p1
+                Integer.parseInt(partes[2]),  // p2
+                EstadoTurno.valueOf(partes[3]), // estadoTurno
+                jugadorMano                     // jugadorMano
         );
+
+        // ✅ NUEVO: Procesar estado del truco si está presente
+        if (partes.length >= 7) {
+            boolean trucoUsado = partes[5].equals("1");
+            int manoTruco = Integer.parseInt(partes[6]);
+
+            listener.onTrucoActualizado(trucoUsado, manoTruco);
+
+            System.out.println("[CLIENTE] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
+        }
     }
 
     private void procesarCartaRival(String mensaje) {
@@ -141,7 +154,6 @@ public class HiloCliente extends Thread {
     }
 
     private void procesarCartasRecibidas(String mensaje) {
-        // Formato: "CARTAS:1:ESPADAS,7:ORO,3:BASTO"
         mensaje = mensaje.replace("CARTAS:", "");
         String[] cartas = mensaje.split(",");
 
