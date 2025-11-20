@@ -27,6 +27,7 @@ public class ManoManager {
 
     private boolean esMiTurno = true;
     private HiloCliente hc;
+
     public ManoManager(Jugador jugador, CartaRenderer renderer, Viewport viewport,
                        float worldWidth, float worldHeight, float cartaAncho, float cartaAlto, HiloCliente hc) {
         this.jugador = jugador;
@@ -61,7 +62,6 @@ public class ManoManager {
         }
     }
 
-
     public void setPosicionInicialY(float y) {
         this.animatedY = y;
         for (Carta carta : jugador.getMano()) {
@@ -79,12 +79,18 @@ public class ManoManager {
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
         float Y_FINAL = WORLD_HEIGHT * 0.05f;
 
-        // Limpiar inputs anteriores
+        // ✅ IMPORTANTE: Limpiar inputs anteriores del multiplexer
+        multiplexer.clear();
         cartaInputs.clear();
+
+        System.out.println("[MANO_MANAGER] Inicializando " + numCartas + " cartas");
 
         for (int i = 0; i < numCartas; i++) {
             Carta carta = mano[i];
-            if (carta == null) continue;
+            if (carta == null) {
+                System.out.println("[MANO_MANAGER] ⚠️ Carta " + i + " es null!");
+                continue;
+            }
 
             float currentX = startX + (i * CARTA_ANCHO) + (i * ESPACIADO);
             carta.updateLimites(currentX, Y_FINAL, CARTA_ANCHO, CARTA_ALTO);
@@ -103,15 +109,20 @@ public class ManoManager {
 
             input.setHabilitado(esMiTurno);
 
-            // Guardar referencia al input
             cartaInputs.add(input);
-
             multiplexer.addProcessor(input);
+
+            System.out.println("[MANO_MANAGER] ✅ Carta " + i + " inicializada: " + carta.getNombre());
         }
+
+        System.out.println("[MANO_MANAGER] Total cartas inicializadas: " + cartaInputs.size());
     }
 
     public void render() {
-        for (Carta carta : jugador.getMano()) {
+        Carta[] mano = jugador.getMano();
+        int cartasRenderizadas = 0;
+
+        for (Carta carta : mano) {
             if (carta == null) continue;
 
             Rectangle limitesCarta = carta.getLimites();
@@ -125,6 +136,11 @@ public class ManoManager {
                     limitesCarta.width,
                     limitesCarta.height
             );
+            cartasRenderizadas++;
+        }
+
+        if (cartasRenderizadas == 0) {
+            System.out.println("[MANO_MANAGER] ⚠️ No se renderizaron cartas!");
         }
     }
 

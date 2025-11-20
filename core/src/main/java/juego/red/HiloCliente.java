@@ -33,6 +33,7 @@ public class HiloCliente extends Thread {
         DatagramPacket dp = new DatagramPacket(data, data.length, ipserver, puerto);
         try {
             conexion.send(dp);
+            System.out.println("[CLIENTE] Enviado: " + mensaje);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,6 +55,7 @@ public class HiloCliente extends Thread {
 
     private void procesarMensaje(DatagramPacket dp) {
         String mensaje = (new String(dp.getData())).trim();
+        System.out.println("[CLIENTE] <<<< RECIBIDO: " + mensaje);
 
         if (mensaje.equals("OK")) {
             System.out.println("[CLIENTE] Conectado al servidor");
@@ -77,24 +79,31 @@ public class HiloCliente extends Thread {
             }
         }
         else if (mensaje.startsWith("CARTAS:")) {
+            System.out.println("[CLIENTE] ✅ Mensaje CARTAS recibido!");
             procesarCartasRecibidas(mensaje);
         }
         else if (mensaje.equals("NUEVA_RONDA")) {
+            System.out.println("[CLIENTE] ✅ NUEVA_RONDA recibida");
             if (listener != null) {
                 listener.onNuevaRonda();
             }
+        }
+        else {
+            System.out.println("[CLIENTE] ⚠️ Mensaje desconocido: " + mensaje);
         }
     }
 
     private void procesarID(String mensaje) {
         mensaje = mensaje.replace("ID:", "");
         listener.onConectado(Integer.parseInt(mensaje));
-        System.out.println("[CLIENTE] ID asignado por el servidor: " + mensaje);
+        System.out.println("[CLIENTE] ID asignado: " + mensaje);
     }
 
     private void procesarEmpieza(String mensaje) {
         String idStr = mensaje.split(":")[1];
         int idMano = Integer.parseInt(idStr);
+
+        System.out.println("[CLIENTE] Partida inicia, empieza jugador: " + idMano);
 
         if (listener != null) {
             listener.startGame(idMano);
@@ -136,25 +145,38 @@ public class HiloCliente extends Thread {
         mensaje = mensaje.replace("CARTAS:", "");
         String[] cartas = mensaje.split(",");
 
-        System.out.println("[CLIENTE] Recibidas " + cartas.length + " cartas del servidor");
+        System.out.println("[CLIENTE] ========================================");
+        System.out.println("[CLIENTE] Procesando " + cartas.length + " cartas");
+        System.out.println("[CLIENTE] Mensaje completo: " + mensaje);
+        System.out.println("[CLIENTE] ========================================");
 
-        for (String cartaStr : cartas) {
+        for (int i = 0; i < cartas.length; i++) {
+            String cartaStr = cartas[i].trim();
+            System.out.println("[CLIENTE] Procesando carta " + (i+1) + ": '" + cartaStr + "'");
+
             String[] partes = cartaStr.split(":");
+
             if (partes.length >= 2) {
                 try {
-                    int valor = Integer.parseInt(partes[0]);
-                    Palo palo = Palo.valueOf(partes[1]);
+                    int valor = Integer.parseInt(partes[0].trim());
+                    Palo palo = Palo.valueOf(partes[1].trim());
 
                     if (listener != null) {
                         listener.onCartaRecibida(valor, palo);
+                        System.out.println("[CLIENTE] ✅ Carta agregada: " + valor + " de " + palo);
                     }
-
-                    System.out.println("[CLIENTE] Carta recibida: " + valor + " de " + palo);
                 } catch (Exception e) {
-                    System.err.println("[CLIENTE] Error procesando carta: " + e.getMessage());
+                    System.err.println("[CLIENTE] ❌ Error procesando carta: " + e.getMessage());
+                    e.printStackTrace();
                 }
+            } else {
+                System.err.println("[CLIENTE] ❌ Formato inválido para carta: " + cartaStr);
             }
         }
+
+        System.out.println("[CLIENTE] ========================================");
+        System.out.println("[CLIENTE] Fin del procesamiento de cartas");
+        System.out.println("[CLIENTE] ========================================");
     }
 
     public void detener() {

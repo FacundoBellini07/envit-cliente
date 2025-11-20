@@ -231,16 +231,13 @@ public class PantallaPartida implements Screen, GameController {
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
 
-            this.batch.begin();
-            manoRivalRenderer.render(batch);
-            this.batch.end();
 
             manoManager.render();
 
             // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
             zonaJuegoJugador.renderCartas();
             zonaJuegoRival.renderCartas();
-
+            manoRivalRenderer.render(batch);
             // 5. DIBUJAR BOTÓN DE TRUCO
             botonTruco.render(batch, shapeRenderer);
 
@@ -288,13 +285,16 @@ public class PantallaPartida implements Screen, GameController {
             return;
         }
 
-        // ✅ Reinicializar cuando tengamos 3 cartas
+        // ✅ CORREGIDO: Inicialización de la mano
         if (inicioRonda) {
             Carta[] miMano = jugadores.get(0).getMano();
 
             int cartasDisponibles = 0;
             for (Carta c : miMano) {
-                if (c != null) cartasDisponibles++;
+                if (c != null) {
+                    cartasDisponibles++;
+                    System.out.println("[UPDATE] Carta " + cartasDisponibles + ": " + c.getNombre());
+                }
             }
 
             System.out.println("[UPDATE] inicioRonda=true, cartas disponibles: " + cartasDisponibles);
@@ -302,12 +302,20 @@ public class PantallaPartida implements Screen, GameController {
             if (cartasDisponibles == 3) {
                 System.out.println("[UPDATE] ✅ Inicializando mano con 3 cartas");
 
+                // ✅ IMPORTANTE: Limpiar el InputMultiplexer antes de reinicializar
+                manoManager.getInputMultiplexer().clear();
+
                 manoManager.inicializarMano();
                 manoRivalRenderer.inicializarPosiciones();
+
+                // ✅ IMPORTANTE: Asegurarse de que el InputProcessor esté activo
+                Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
+
                 animacion.iniciarAnimacionReparto();
 
                 inicioRonda = false;
                 System.out.println("[UPDATE] inicioRonda ahora es false");
+                System.out.println("[UPDATE] InputProcessor configurado correctamente");
             }
         }
     }
@@ -323,11 +331,13 @@ public class PantallaPartida implements Screen, GameController {
         this.quienEmpieza = idMano;
         TipoJugador tipoMano = (idMano == 0) ? TipoJugador.JUGADOR_1 : TipoJugador.JUGADOR_2;
 
-        // ✅ IMPORTANTE: rivalBot siempre es null en red, no lo necesitamos
         partida.inicializar(null,
                 jugadores.get(0), jugadores.get(1), mano, miRol, tipoMano);
 
+        inicioRonda = true;
+
         System.out.println("[CLIENTE] Partida iniciada. Mi rol: " + miRol + ", Empieza: " + tipoMano);
+        System.out.println("[CLIENTE] inicioRonda marcado como true");
     }
     public void onConectado(int id) {
         this.miID = id;
@@ -378,37 +388,37 @@ public class PantallaPartida implements Screen, GameController {
     public void onCartaRecibida(int valor, Palo palo) {
         Carta carta = new Carta(valor, palo);
 
+        // ✅ SIEMPRE agregar a jugadores.get(0) que es "yo"
         jugadores.get(0).agregarCarta(carta);
-        System.out.println("[CLIENTE " + miRol + "] Carta agregada a MI mano (índice 0): " + valor + " de " + palo);
+        System.out.println("[CLIENTE " + miRol + "] Carta agregada a MI mano: " + valor + " de " + palo);
 
         // Verificar cuántas cartas tengo
         Carta[] miMano = jugadores.get(0).getMano();
 
         int cartasRecibidas = 0;
         for (Carta c : miMano) {
-            if (c != null) cartasRecibidas++;
+            if (c != null) {
+                cartasRecibidas++;
+                System.out.println("[CLIENTE] Carta " + cartasRecibidas + ": " + c.getNombre());
+            }
         }
 
         System.out.println("[CLIENTE] Cartas en mi mano: " + cartasRecibidas + "/3");
 
         if (cartasRecibidas == 3) {
-            inicioRonda = true;
-            System.out.println("[CLIENTE] ¡Tengo 3 cartas! Marcando inicioRonda=true");
+            System.out.println("[CLIENTE] ¡Tengo 3 cartas! Listo para inicializar");
+            // ✅ NO marcamos inicioRonda aquí, lo hacemos en startGame
         }
     }
 
+
     public void onNuevaRonda() {
         System.out.println("[PANTALLA] Nueva ronda iniciada por el servidor");
-
-        // Limpiar zonas de juego
-        if (zonaJuegoJugador != null) zonaJuegoJugador.limpiar();
-        if (zonaJuegoRival != null) zonaJuegoRival.limpiar();
-
-        // Limpiar las manos de los jugadores
+        zonaJuegoJugador.limpiar();
+        zonaJuegoRival.limpiar();
         jugadores.get(0).limpiarMazo();
         jugadores.get(1).limpiarMazo();
 
-        // ✅ IMPORTANTE: Marcar que necesitamos reinicializar cuando lleguen las cartas
         inicioRonda = true;
 
         System.out.println("[PANTALLA] Manos limpiadas, esperando nuevas cartas del servidor");
