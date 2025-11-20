@@ -104,28 +104,6 @@ public class Partida {
     public int getManoTrucoUsada() {
         return manoTrucoUsada;
     }
-
-    // --------------------------------------------------------------------------------
-    // MÉTODOS VISUALES O DE COMPATIBILIDAD
-    // --------------------------------------------------------------------------------
-
-    // Se mantiene para repartir visualmente al inicio (animación)
-    public void repartirCartas(Jugador jugador1, Jugador jugador2) {
-        if (indiceMazo + 6 > mazoRevuelto.size()) {
-            indiceMazo = 0;
-            Collections.shuffle(mazoRevuelto);
-        }
-        // Repartimos 3 cartas a cada uno para que tengan algo en la mano visualmente
-        // (Nota: En un juego de red ideal, el servidor mandaría QUÉ cartas son exactamente)
-        for (int i = 0; i < 3; i++) {
-            jugador1.agregarCarta(mazoRevuelto.get(indiceMazo++));
-            jugador2.agregarCarta(mazoRevuelto.get(indiceMazo++));
-        }
-    }
-
-    // Estos métodos ya no deberían usarse para controlar flujo lógico en el cliente,
-    // pero los dejamos vacíos o con retorno simple para evitar errores de compilación
-    // si PantallaPartida los llama.
     public boolean rondaTerminada() {
         return false; // El servidor controla el fin de ronda
     }

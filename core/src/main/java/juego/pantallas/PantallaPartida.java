@@ -90,13 +90,16 @@ public class PantallaPartida implements Screen, GameController {
     public void show() {
         hc = new HiloCliente(this);
         hc.start();
+
         fondoPartida = new Texture(Gdx.files.internal("fondos/fondoPartida.png"));
         mazoSprite = new Texture(Gdx.files.internal("sprites/mazo_sprite.png"));
         dorsoCartaSprite = new Texture(Gdx.files.internal("sprites/dorso.png"));
         mazo = new Mazo();
+
         camera = new OrthographicCamera();
         viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         viewport.apply();
+
         shapeRenderer = new ShapeRenderer();
         cartaRenderer = new CartaRenderer(batch, shapeRenderer, viewport);
 
@@ -118,8 +121,10 @@ public class PantallaPartida implements Screen, GameController {
         zonaJuegoRival = new ZonaJuego(zonaRivalX, zonaRivalY, zonaAncho, zonaAlto);
         zonaJuegoRival.setCartaRenderer(cartaRenderer);
 
+        // ✅ IMPORTANTE: ManoManager SIEMPRE maneja jugadores.get(0) (YO)
+        // No importa si soy J1 o J2, ManoManager siempre dibuja MIS cartas abajo
         manoManager = new ManoManager(
-                jugadores.get(0),
+                jugadores.get(0),  // Siempre el índice 0 es "yo"
                 cartaRenderer,
                 viewport,
                 WORLD_WIDTH,
@@ -130,12 +135,9 @@ public class PantallaPartida implements Screen, GameController {
         );
         manoManager.setZonaJuego(zonaJuegoJugador);
 
-        rivalBot = new RivalBot(jugadores.get(1), zonaJuegoRival);
-        rivalBot.setDelay(1.5f);
-        rivalBot.setProbabilidadTruco(0.3f);
-
+        // ✅ IMPORTANTE: ManoRivalRenderer SIEMPRE maneja jugadores.get(1) (RIVAL)
         manoRivalRenderer = new ManoRivalRenderer(
-                jugadores.get(1),
+                jugadores.get(1),  // Siempre el índice 1 es "rival"
                 cartaRenderer,
                 dorsoCartaSprite,
                 zonaJuegoRival,
@@ -154,11 +156,8 @@ public class PantallaPartida implements Screen, GameController {
                 manoManager
         );
 
-
-        rivalBot.setPartida(partida);
-
         Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
-        
+
         float btnTrucoAncho = 80f;
         float btnTrucoAlto = 60f;
         float margenIzq = 20f;
@@ -183,7 +182,7 @@ public class PantallaPartida implements Screen, GameController {
                 WORLD_HEIGHT
         );
 
-        partida.setZonaJuegos(zonaJuegoJugador,zonaJuegoRival);
+        partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -238,7 +237,7 @@ public class PantallaPartida implements Screen, GameController {
             this.batch.begin();
             manoRivalRenderer.render(batch);
             this.batch.end();
-
+            manoRivalRenderer.render(batch);
             manoManager.render();
 
             // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
@@ -292,17 +291,28 @@ public class PantallaPartida implements Screen, GameController {
             return;
         }
 
-        // ✅ NUEVO: Reinicializar la mano cuando sea necesario
-        if (inicioRonda && jugadores.get(0).getMano()[0] != null) {
-            manoManager.inicializarMano();
-            manoRivalRenderer.inicializarPosiciones();
-            animacion.iniciarAnimacionReparto();
+        // ✅ Reinicializar cuando tengamos 3 cartas
+        if (inicioRonda) {
+            // Verificar MIS cartas (jugadores.get(0) siempre soy YO)
+            Carta[] miMano = jugadores.get(0).getMano();
 
-            if (!partida.esMiTurnoLocal() && rivalBot != null) {
-                rivalBot.activarTurno();
+            int cartasDisponibles = 0;
+            for (Carta c : miMano) {
+                if (c != null) cartasDisponibles++;
             }
 
-            inicioRonda = false;
+            System.out.println("[UPDATE] inicioRonda=true, cartas disponibles: " + cartasDisponibles);
+
+            if (cartasDisponibles == 3) {
+                System.out.println("[UPDATE] ✅ Inicializando mano con 3 cartas");
+
+                manoManager.inicializarMano();
+                manoRivalRenderer.inicializarPosiciones();
+                animacion.iniciarAnimacionReparto();
+
+                inicioRonda = false;
+                System.out.println("[UPDATE] inicioRonda ahora es false");
+            }
         }
     }
 
@@ -317,28 +327,28 @@ public class PantallaPartida implements Screen, GameController {
         this.quienEmpieza = idMano;
         TipoJugador tipoMano = (idMano == 0) ? TipoJugador.JUGADOR_1 : TipoJugador.JUGADOR_2;
 
-        // Reinicializamos la partida con el dato correcto del servidor
-        partida.inicializar(rivalBot,
-                jugadores.get(0), jugadores.get(1), mano, miRol,tipoMano);
+        // ✅ IMPORTANTE: rivalBot siempre es null en red, no lo necesitamos
+        partida.inicializar(null,
+                jugadores.get(0), jugadores.get(1), mano, miRol, tipoMano);
 
-        System.out.println("Sincronizado: Empieza el jugador ID " + idMano);
-
+        System.out.println("[CLIENTE] Partida iniciada. Mi rol: " + miRol + ", Empieza: " + tipoMano);
     }
-    public void onConectado(int id){
+    public void onConectado(int id) {
         this.miID = id;
-
         if (miID == 0) {
             // Yo soy el Jugador 1
-            jugadores.add(new Jugador("Tú (Jugador 1)"));
-            jugadores.add(new Jugador("Rival (Jugador 2)"));
-            this.miRol = TipoJugador.JUGADOR_1; // Asignar el rol
+            this.miRol = TipoJugador.JUGADOR_1;
+            jugadores.get(0).setNombre("Tú (J1)");
+            jugadores.get(1).setNombre("Rival (J2)");
+            System.out.println("[CLIENTE] Conectado como Jugador 1");
         } else {
             // Yo soy el Jugador 2
-            jugadores.add(new Jugador("Rival (Jugador 1)"));
-            jugadores.add(new Jugador("Tú (Jugador 2)"));
-            this.miRol = TipoJugador.JUGADOR_2; // Asignar el rol
+            this.miRol = TipoJugador.JUGADOR_2;
+            jugadores.get(0).setNombre("Rival (J1)");
+            jugadores.get(1).setNombre("Tú (J2)");
+            System.out.println("[CLIENTE] Conectado como Jugador 2");
         }
-
+        System.out.println("[CLIENTE] Mi rol asignado: " + miRol);
     }
 
     public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano){
@@ -370,16 +380,25 @@ public class PantallaPartida implements Screen, GameController {
     }
 
     public void onCartaRecibida(int valor, Palo palo) {
-        // Crear la carta y agregarla a la mano del jugador local
         Carta carta = new Carta(valor, palo);
 
-        if (miRol == TipoJugador.JUGADOR_1) {
-            jugadores.get(0).agregarCarta(carta);
-        } else {
-            jugadores.get(1).agregarCarta(carta);
+        jugadores.get(0).agregarCarta(carta);
+        System.out.println("[CLIENTE " + miRol + "] Carta agregada a MI mano (índice 0): " + valor + " de " + palo);
+
+        // Verificar cuántas cartas tengo
+        Carta[] miMano = jugadores.get(0).getMano();
+
+        int cartasRecibidas = 0;
+        for (Carta c : miMano) {
+            if (c != null) cartasRecibidas++;
         }
 
-        System.out.println("[PANTALLA] Carta agregada a mi mano: " + valor + " de " + palo);
+        System.out.println("[CLIENTE] Cartas en mi mano: " + cartasRecibidas + "/3");
+
+        if (cartasRecibidas == 3) {
+            inicioRonda = true;
+            System.out.println("[CLIENTE] ¡Tengo 3 cartas! Marcando inicioRonda=true");
+        }
     }
 
     public void onNuevaRonda() {
@@ -393,11 +412,10 @@ public class PantallaPartida implements Screen, GameController {
         jugadores.get(0).limpiarMazo();
         jugadores.get(1).limpiarMazo();
 
-        // Reinicializar el manager de mano cuando lleguen las nuevas cartas
-        // (esto se hará automáticamente con onCartaRecibida)
-
-        // Marcar que necesitamos reinicializar
+        // ✅ IMPORTANTE: Marcar que necesitamos reinicializar cuando lleguen las cartas
         inicioRonda = true;
+
+        System.out.println("[PANTALLA] Manos limpiadas, esperando nuevas cartas del servidor");
     }
 
     @Override
