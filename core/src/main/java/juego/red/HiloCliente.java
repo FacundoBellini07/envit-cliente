@@ -7,6 +7,8 @@ import juego.personajes.TipoJugador;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class HiloCliente extends Thread {
 
@@ -22,6 +24,14 @@ public class HiloCliente extends Thread {
             this.listener = listener;
             ipserver = InetAddress.getByName("255.255.255.255");
             conexion = new DatagramSocket();
+            new Timer().scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (!fin) {
+                        enviarMensaje("PING");
+                    }
+                }
+            }, 1000, 1000);
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
         }
@@ -60,10 +70,19 @@ public class HiloCliente extends Thread {
         if (mensaje.equals("OK")) {
             System.out.println("[CLIENTE] Conectado al servidor");
             ipserver = dp.getAddress();
+            new Timer().scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (!fin) {
+                        enviarMensaje("PING");
+                    }
+                }
+            }, 1000, 1000);
         }
         else if (mensaje.startsWith("ID:")) {
             procesarID(mensaje);
         }
+
         else if (mensaje.startsWith("EMPIEZA:")) {
             procesarEmpieza(mensaje);
         }
@@ -87,6 +106,23 @@ public class HiloCliente extends Thread {
             if (listener != null) {
                 listener.onNuevaRonda();
             }
+        }
+        else if (mensaje.startsWith("GANADOR:")) {
+            String idStr = mensaje.split(":")[1];
+            int idGanador = Integer.parseInt(idStr);
+            System.out.println("[CLIENTE] Recibido mensaje de victoria. Ganador ID: " + idGanador);
+
+            if (listener != null) {
+                listener.onJuegoTerminado(idGanador);
+            }
+        }
+        else if (mensaje.equals("FULL")) {
+            System.out.println("[CLIENTE] El servidor está lleno.");
+        }
+        else if (mensaje.equals("RIVAL_SE_FUE")) {
+            System.out.println("[CLIENTE] El rival se desconectó. Cerrando...");
+            listener.onVolverAlMenu();
+
         }
         else {
             System.out.println("[CLIENTE] ⚠️ Mensaje desconocido: " + mensaje);
@@ -191,6 +227,10 @@ public class HiloCliente extends Thread {
         System.out.println("[CLIENTE] ========================================");
     }
 
+    public void enviarDesconexion() {
+        enviarMensaje("SALIR");
+        detener();
+    }
     public void detener() {
         fin = true;
         if (conexion != null && !conexion.isClosed()) {

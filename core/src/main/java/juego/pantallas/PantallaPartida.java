@@ -61,6 +61,7 @@ public class PantallaPartida implements Screen, GameController {
 
     private BotonTruco botonTruco;
 
+    private boolean rivalDesconectado = false;
     private boolean debeVolverAlMenu = false;
     private HiloCliente hc;
     private int mano = 0;
@@ -195,6 +196,30 @@ public class PantallaPartida implements Screen, GameController {
             if (debeVolverAlMenu) {
                 game.setScreen(new PantallaMenu((juego.Principal) game));
                 dispose();
+                return;
+            }
+            if (rivalDesconectado) {
+                Gdx.gl.glClearColor(0, 0, 0, 1);
+                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+                batch.setProjectionMatrix(viewport.getCamera().combined);
+                batch.begin();
+
+                font.getData().setScale(2.0f);
+                font.setColor(Color.RED);
+                // Ajusta las coordenadas X,Y según necesites para centrarlo
+                font.draw(batch, "¡RIVAL DESCONECTADO!", WORLD_WIDTH / 2f - 180, WORLD_HEIGHT / 2f + 50);
+
+                font.getData().setScale(1.2f);
+                font.setColor(Color.WHITE);
+                font.draw(batch, "Toca la pantalla para volver al menú", WORLD_WIDTH / 2f - 160, WORLD_HEIGHT / 2f - 50);
+
+                batch.end();
+
+                if (Gdx.input.justTouched()) {
+                    game.setScreen(new PantallaMenu((juego.Principal) game));
+                    dispose();
+                }
                 return;
             }
 
@@ -430,6 +455,38 @@ public class PantallaPartida implements Screen, GameController {
         System.out.println("[PANTALLA] Manos limpiadas, esperando nuevas cartas del servidor");
     }
 
+    // Implementación del método de la interfaz
+    @Override
+    public void onJuegoTerminado(int idGanador) {
+        System.out.println("[PANTALLA] Juego terminado. Ganador global ID: " + idGanador);
+
+        // Determinar quién es el ganador basado en mi ID local
+        Jugador objetoGanador;
+
+        // Si el ID del ganador coincide con MI ID asignado (miID)
+        if (idGanador == this.miID) {
+            objetoGanador = jugadores.get(0); // Jugador 0 siempre soy "YO" en mi lista local
+        } else {
+            objetoGanador = jugadores.get(1); // Jugador 1 siempre es "RIVAL" en mi lista local
+        }
+
+        // Activar la pantalla final
+        pantallaFinal.activar(
+                objetoGanador,
+                jugadores.get(0), // Yo
+                jugadores.get(1)  // Rival
+        );
+
+        // Desactivar controles de juego
+        Gdx.input.setInputProcessor(null);
+    }
+
+
+    public void onVolverAlMenu() {
+        System.out.println("El rival se desconectó");
+        this.rivalDesconectado = true;
+    }
+
     @Override
     public void resize(int width, int height) {
         System.out.println("Se ha redimensionado la pantalla a: " + width + "x" + height);
@@ -452,5 +509,8 @@ public class PantallaPartida implements Screen, GameController {
         if (batch != null) batch.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (font != null) font.dispose();
+        if (hc != null) {
+            hc.enviarDesconexion();
+        }
     }
 }

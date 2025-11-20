@@ -10,11 +10,9 @@ public interface GameController {
     void onCartaRival(int valor, Palo palo);
     void onTrucoRival();
     void startGame(int idMano);
-
-    // Métodos existentes
+    void onJuegoTerminado(int idGanador);
     void onCartaRecibida(int valor, Palo palo);
     void onNuevaRonda();
-
-    // ✅ NUEVO: Recibir actualización del estado del truco desde el servidor
+    void onVolverAlMenu();
     void onTrucoActualizado(boolean trucoUsado, int manoTruco);
 }
