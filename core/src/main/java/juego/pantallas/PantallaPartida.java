@@ -134,16 +134,7 @@ public class PantallaPartida implements Screen, GameController {
         );
         manoManager.setZonaJuego(zonaJuegoJugador);
 
-        manoRivalRenderer = new ManoRivalRenderer(
-                jugadores.get(1),
-                cartaRenderer,
-                dorsoCartaSprite,
-                zonaJuegoRival,
-                WORLD_WIDTH,
-                WORLD_HEIGHT,
-                CARTA_ANCHO,
-                CARTA_ALTO
-        );
+        System.out.println(jugadores.get(1).getMano()[0].getLimites());
 
         animacion = new Animacion(
                 WORLD_WIDTH,
@@ -247,8 +238,8 @@ public class PantallaPartida implements Screen, GameController {
             animacion.render(batch);
             batch.draw(mazoSprite, mazoX, mazoY, mazoAncho, mazoAlto);
 
-            this.batch.end();
 
+            this.batch.end();
             // 2. DIBUJAR LOS FONDOS DE LAS ZONAS DE JUEGO
             zonaJuegoJugador.renderFondo(shapeRenderer);
             zonaJuegoRival.renderFondo(shapeRenderer);
@@ -256,13 +247,12 @@ public class PantallaPartida implements Screen, GameController {
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
 
-
+            manoRivalRenderer.render(batch);
             manoManager.render();
 
             // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
             zonaJuegoJugador.renderCartas();
             zonaJuegoRival.renderCartas();
-            manoRivalRenderer.render(batch);
             // 5. DIBUJAR BOTÓN DE TRUCO
             botonTruco.render(batch, shapeRenderer);
 
@@ -331,7 +321,6 @@ public class PantallaPartida implements Screen, GameController {
                 manoManager.getInputMultiplexer().clear();
 
                 manoManager.inicializarMano();
-                manoRivalRenderer.inicializarPosiciones();
 
                 // ✅ IMPORTANTE: Asegurarse de que el InputProcessor esté activo
                 Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());

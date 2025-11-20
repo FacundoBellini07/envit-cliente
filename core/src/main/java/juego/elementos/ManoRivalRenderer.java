@@ -47,7 +47,8 @@ public class ManoRivalRenderer {
         float anchoTotalMano = (numCartas * CARTA_ANCHO) + ((numCartas - 1) * ESPACIADO);
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
 
-        float yRival = WORLD_HEIGHT - (CARTA_ALTO* 0.5f);
+        final float MARGEN_SUPERIOR = 20f; // Define un margen de 20 píxeles
+        float yRival = WORLD_HEIGHT - CARTA_ALTO - MARGEN_SUPERIOR;
 
         for (int i = 0; i < numCartas; i++) {
             Carta carta = mano[i];
