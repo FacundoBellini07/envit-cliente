@@ -68,6 +68,9 @@ public class PantallaPartida implements Screen, GameController {
     private int miID = -1;
     private TipoJugador miRol;
     private int quienEmpieza;
+    private boolean mostrarMensajeTrucoRival;
+    private float tiempoMensajeTrucoRival = 0f;
+    private final float DURACION_MENSAJE_TRUCO = 5.0f;
 
     public PantallaPartida(Game game) {
         this.game = game;
@@ -180,7 +183,7 @@ public class PantallaPartida implements Screen, GameController {
                 WORLD_HEIGHT
         );
 
-        
+        partida.setZonaJuegos(zonaJuegoJugador,zonaJuegoRival);
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -256,10 +259,11 @@ public class PantallaPartida implements Screen, GameController {
 
     public void update(float delta) {
         animacion.update(delta);
-        partida.update(delta);
-        if (partida.esMiTurnoLocal()) {
-            // AQUÍ: Enviar al servidor la carta jugada
-            // hc.enviarMensaje("CARTA_JUGADA:" + numeroCarta + ":" + palo);
+        if (mostrarMensajeTrucoRival) {
+            tiempoMensajeTrucoRival -= delta;
+            if (tiempoMensajeTrucoRival <= 0) {
+                mostrarMensajeTrucoRival = false;
+            }
         }
         manoManager.setEsMiTurno(partida.esMiTurnoLocal());
 
@@ -327,7 +331,7 @@ public class PantallaPartida implements Screen, GameController {
         TipoJugador tipoMano = (idMano == 0) ? TipoJugador.JUGADOR_1 : TipoJugador.JUGADOR_2;
 
         // Reinicializamos la partida con el dato correcto del servidor
-        partida.inicializar(zonaJuegoJugador, zonaJuegoRival, rivalBot,
+        partida.inicializar(rivalBot,
                 jugadores.get(0), jugadores.get(1), mano, miRol,tipoMano);
 
         System.out.println("Sincronizado: Empieza el jugador ID " + idMano);
@@ -359,29 +363,23 @@ public class PantallaPartida implements Screen, GameController {
         Carta cartaRival = new Carta(valor, palo);
 
         if (zonaJuegoRival != null) {
-            // Obtenemos los límites de la zona de juego del rival
+
             com.badlogic.gdx.math.Rectangle limitesZona = zonaJuegoRival.getLimites();
 
-            // 2. Calcular la posición (ejemplo: centrado en la zona de juego del rival)
+
             float xCarta = limitesZona.x + (limitesZona.width - CARTA_ANCHO) / 2f;
             float yCarta = limitesZona.y + (limitesZona.height - CARTA_ALTO) / 2f;
 
-            // **OPCIONAL:** Si quieres que se desplacen un poco como en el truco real
-            // int numCartas = zonaJuegoRival.getCantidadCartas();
-            // float desplazamientoX = 0.2f * CARTA_ANCHO * numCartas;
-            // xCarta += desplazamientoX;
-
-            // **PASO CRUCIAL:** Asignar los límites CORRECTOS a la carta.
             cartaRival.updateLimites(xCarta, yCarta, CARTA_ANCHO, CARTA_ALTO);
 
-            // 3. Agregarla a la zona de juego del rival.
             zonaJuegoRival.agregarCarta(cartaRival);
 
             System.out.println("[PANTALLA] Carta del rival agregada y dimensionada.");
         }
     }
     public void onTrucoRival(){
-
+        this.mostrarMensajeTrucoRival = true;
+        this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
     }
 
     @Override

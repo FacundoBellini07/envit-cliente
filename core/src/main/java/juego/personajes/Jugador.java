@@ -55,4 +55,7 @@ public class Jugador {
         this.puntos = puntos;
     }
 
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 }

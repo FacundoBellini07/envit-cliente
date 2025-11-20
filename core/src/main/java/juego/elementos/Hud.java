@@ -6,13 +6,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import juego.personajes.Jugador;
 
-/**
- * HUD (Heads-Up Display) que muestra información de la partida:
- * - Puntos del jugador
- * - Puntos del rival
- * - Mano actual (1/3, 2/3, 3/3)
- * - Estado del truco
- */
 public class Hud {
 
     private BitmapFont font;
@@ -60,9 +53,7 @@ public class Hud {
         batch.end();
     }
 
-    /**
-     * ✅ NUEVO: Render con información de truco
-     */
+
     public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador,
                        boolean trucoActivo, int manoTruco) {
         batch.begin();
@@ -79,7 +70,6 @@ public class Hud {
         // Indicador de turno (centro derecha)
         dibujarIndicadorTurno(batch, esTurnoJugador);
 
-        // ✅ NUEVO: Mostrar si el truco está activo
         if (trucoActivo && manoActual == manoTruco) {
             dibujarIndicadorTruco(batch, manoActual);
         }
@@ -198,4 +188,5 @@ public class Hud {
 
         batch.end();
     }
+
 }
