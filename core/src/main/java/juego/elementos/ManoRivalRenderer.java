@@ -2,15 +2,10 @@ package juego.elementos;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import juego.personajes.Jugador;
-
 
 public class ManoRivalRenderer {
 
-    private final Jugador jugadorRival;
-    private final CartaRenderer cartaRenderer;
     private final Texture dorsoTexture;
     private final ZonaJuego zonaJuego;
 
@@ -20,14 +15,14 @@ public class ManoRivalRenderer {
     private final float CARTA_ALTO;
     private final float ESPACIADO;
 
-    // Configuración
-    private boolean mostrarCartasBocaAbajo = true; // Para debug, ponerlo en false
+    private int cartasDisponibles = 3; // Siempre empieza con 3
 
-    public ManoRivalRenderer(Jugador rival, CartaRenderer renderer, Texture dorso,
-                             ZonaJuego zona, float worldWidth, float worldHeight,
+    // Posiciones calculadas de los dorsos
+    private Rectangle[] posicionesDorsos = new Rectangle[3];
+
+    public ManoRivalRenderer(Texture dorso, ZonaJuego zona,
+                             float worldWidth, float worldHeight,
                              float cartaAncho, float cartaAlto) {
-        this.jugadorRival = rival;
-        this.cartaRenderer = renderer;
         this.dorsoTexture = dorso;
         this.zonaJuego = zona;
         this.WORLD_WIDTH = worldWidth;
@@ -35,63 +30,50 @@ public class ManoRivalRenderer {
         this.CARTA_ANCHO = cartaAncho;
         this.CARTA_ALTO = cartaAlto;
         this.ESPACIADO = CARTA_ANCHO * 0.2f;
+
+        // Inicializar los rectángulos de posición
+        for (int i = 0; i < 3; i++) {
+            posicionesDorsos[i] = new Rectangle();
+        }
+
+        // Calcular posiciones iniciales
+        calcularPosiciones();
     }
 
-    /**
-     * Posiciona las cartas del rival en la parte superior
-     */
-    public void inicializarPosiciones() {
-        Carta[] mano = jugadorRival.getMano();
-        int numCartas = mano.length;
-
-        float anchoTotalMano = (numCartas * CARTA_ANCHO) + ((numCartas - 1) * ESPACIADO);
+    private void calcularPosiciones() {
+        float anchoTotalMano = (3 * CARTA_ANCHO) + (2 * ESPACIADO);
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
 
-        final float MARGEN_SUPERIOR = 20f; // Define un margen de 20 píxeles
-        float yRival = WORLD_HEIGHT - CARTA_ALTO - MARGEN_SUPERIOR;
+        final float MARGEN_SUPERIOR = 20f;
+        float yRival = WORLD_HEIGHT - CARTA_ALTO /2 -35;
 
-        for (int i = 0; i < numCartas; i++) {
-            Carta carta = mano[i];
-            if (carta == null) continue;
-
+        for (int i = 0; i < 3; i++) {
             float currentX = startX + (i * CARTA_ANCHO) + (i * ESPACIADO);
-            carta.updateLimites(currentX, yRival, CARTA_ANCHO, CARTA_ALTO);
+            posicionesDorsos[i].set(currentX, yRival, CARTA_ANCHO, CARTA_ALTO);
         }
     }
 
-    /**
-     * Dibuja las cartas del rival
-     */
     public void render(SpriteBatch batch) {
-        Carta[] mano = jugadorRival.getMano();
-
-        for (Carta carta : mano) {
-            if (carta == null) continue;
-            if (zonaJuego.contieneCartaJugada(carta)) {
-                continue;
-            }
-
-            Rectangle limites = carta.getLimites();
-
-            if (mostrarCartasBocaAbajo) {
-                // Dibujar dorso
-                batch.draw(dorsoTexture,
-                        limites.x, limites.y,
-                        limites.width, limites.height);
-            } else {
-                // Dibujar carta real (para debug)
-                cartaRenderer.render(carta,
-                        limites.x, limites.y,
-                        limites.width, limites.height);
-            }
+        // Dibujar solo los dorsos de las cartas que aún no han sido jugadas
+        for (int i = 0; i < cartasDisponibles; i++) {
+            Rectangle pos = posicionesDorsos[i];
+            batch.draw(dorsoTexture, pos.x, pos.y, pos.width, pos.height);
         }
     }
 
-    public void setMostrarBocaAbajo(boolean bocaAbajo) {
-        this.mostrarCartasBocaAbajo = bocaAbajo;
+    public void rivalJugoCarta() {
+        if (cartasDisponibles > 0) {
+            cartasDisponibles--;
+            System.out.println("[MANO_RIVAL] Rival jugó una carta. Quedan: " + cartasDisponibles);
+        }
     }
 
-    public boolean isMostrarBocaAbajo() {
-        return mostrarCartasBocaAbajo;
+    public void reiniciar() {
+        cartasDisponibles = 3;
+        System.out.println("[MANO_RIVAL] Dorsos reiniciados a 3");
+    }
+
+    public int getCartasDisponibles() {
+        return cartasDisponibles;
     }
 }

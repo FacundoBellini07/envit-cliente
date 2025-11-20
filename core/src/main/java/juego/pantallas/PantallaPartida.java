@@ -134,7 +134,15 @@ public class PantallaPartida implements Screen, GameController {
         );
         manoManager.setZonaJuego(zonaJuegoJugador);
 
-        System.out.println(jugadores.get(1).getMano()[0].getLimites());
+        manoRivalRenderer = new ManoRivalRenderer(
+                dorsoCartaSprite,
+                zonaJuegoRival,
+                WORLD_WIDTH,
+                WORLD_HEIGHT,
+                CARTA_ANCHO,
+                CARTA_ALTO
+        );
+
 
         animacion = new Animacion(
                 WORLD_WIDTH,
@@ -246,8 +254,9 @@ public class PantallaPartida implements Screen, GameController {
 
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
-
+            batch.begin();
             manoRivalRenderer.render(batch);
+            batch.end();
             manoManager.render();
 
             // 4. DIBUJAR LAS CARTAS DENTRO DE LAS ZONAS (jugadas)
@@ -388,7 +397,9 @@ public class PantallaPartida implements Screen, GameController {
             float yCarta = limitesZona.y + (limitesZona.height - CARTA_ALTO) / 2f;
 
             cartaRival.updateLimites(xCarta, yCarta, CARTA_ANCHO, CARTA_ALTO);
-
+            if (manoRivalRenderer != null) {
+                manoRivalRenderer.rivalJugoCarta();
+            }
             zonaJuegoRival.agregarCarta(cartaRival);
 
             System.out.println("[PANTALLA] Carta del rival agregada y dimensionada.");
@@ -438,6 +449,10 @@ public class PantallaPartida implements Screen, GameController {
         zonaJuegoRival.limpiar();
         jugadores.get(0).limpiarMazo();
         jugadores.get(1).limpiarMazo();
+
+        if (manoRivalRenderer != null) {
+            manoRivalRenderer.reiniciar();
+        }
 
         inicioRonda = true;
 
