@@ -74,11 +74,9 @@ public class Partida {
         if (estadoActual == EstadoTurno.PARTIDA_TERMINADA) return false;
 
         if (jugadorLocal == TipoJugador.JUGADOR_1) {
-             System.out.println(estadoActual == EstadoTurno.ESPERANDO_JUGADOR_1 ? "CONDISOS" : "NO CONDISOS");
             return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_1;
 
         } else if (jugadorLocal == TipoJugador.JUGADOR_2) {
-            System.out.println(estadoActual == EstadoTurno.ESPERANDO_JUGADOR_2 ? "CONDISOS" : "NO CONDISOS");
             return estadoActual == EstadoTurno.ESPERANDO_JUGADOR_2;
         }
         return false;
@@ -154,7 +152,6 @@ public class Partida {
 
     public boolean esPrimerTurnoEnMano() {
 
-        System.out.println( zonaJugador1.getCantidadCartas() + zonaJugador2.getCantidadCartas() == 0 ? "CONDISOSPRIMERTURNO" : "NO CONDISOSPRIMERCOSO");
         return zonaJugador1.getCantidadCartas() + zonaJugador2.getCantidadCartas() == 0;
     }
 
