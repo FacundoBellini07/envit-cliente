@@ -227,10 +227,6 @@ public class HiloCliente extends Thread {
         System.out.println("[CLIENTE] ========================================");
     }
 
-    public void enviarDesconexion() {
-        enviarMensaje("SALIR");
-        detener();
-    }
     public void detener() {
         fin = true;
         if (conexion != null && !conexion.isClosed()) {

@@ -510,7 +510,7 @@ public class PantallaPartida implements Screen, GameController {
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (font != null) font.dispose();
         if (hc != null) {
-            hc.enviarDesconexion();
+            hc.detener();
         }
     }
 }
