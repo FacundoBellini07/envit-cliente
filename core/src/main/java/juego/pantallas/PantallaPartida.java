@@ -176,7 +176,8 @@ public class PantallaPartida implements Screen, GameController {
                 viewport,
                 hud,
                 WORLD_WIDTH,
-                WORLD_HEIGHT
+                WORLD_HEIGHT,
+                miRol
         );
 
         partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);

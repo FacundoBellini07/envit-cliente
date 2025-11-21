@@ -45,7 +45,7 @@ public class ManoRivalRenderer {
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
 
         final float MARGEN_SUPERIOR = 20f;
-        float yRival = WORLD_HEIGHT - CARTA_ALTO /2 -35;
+        float yRival = WORLD_HEIGHT - CARTA_ALTO /2;
 
         for (int i = 0; i < 3; i++) {
             float currentX = startX + (i * CARTA_ANCHO) + (i * ESPACIADO);

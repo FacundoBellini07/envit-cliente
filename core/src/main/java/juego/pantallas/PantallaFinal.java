@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.personajes.Jugador;
+import juego.personajes.TipoJugador;
 
 /**
  * Pantalla de fin de partida que muestra el resultado final
@@ -29,7 +30,7 @@ public class PantallaFinal {
     private float tiempoTranscurrido = 0f;
     private final float TIEMPO_ANTES_PERMITIR_SALIDA = 5.0f;
     private final float TIEMPO_AUTO_RETORNO = 10.0f;
-
+    private TipoJugador miRol;
     // Jugadores
     private Jugador ganador;
     private Jugador jugador1;
@@ -43,21 +44,16 @@ public class PantallaFinal {
     // Estado
     private boolean activa = false;
 
-    /**
-     * Constructor
-     */
     public PantallaFinal(BitmapFont font, Viewport viewport, Hud hud,
-                         float worldWidth, float worldHeight) {
+                         float worldWidth, float worldHeight, TipoJugador miRol) {
         this.font = font;
         this.viewport = viewport;
         this.hud = hud;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
+        this.miRol = miRol;
     }
 
-    /**
-     * Activa la pantalla final con los jugadores
-     */
     public void activar(Jugador ganador, Jugador jugador1, Jugador jugador2) {
         this.ganador = ganador;
         this.jugador1 = jugador1;
@@ -66,18 +62,8 @@ public class PantallaFinal {
         this.tiempoTranscurrido = 0f;
     }
 
-    /**
-     * Desactiva la pantalla final
-     */
-    public void desactivar() {
-        this.activa = false;
-        this.tiempoTranscurrido = 0f;
-    }
 
-    /**
-     * Actualiza la lógica de la pantalla
-     * @return true si se debe volver al menú
-     */
+
     public boolean update(float delta) {
         if (!activa) {
             return false;
@@ -153,13 +139,17 @@ public class PantallaFinal {
      */
     private void renderPuntuacion(SpriteBatch batch) {
         batch.begin();
-
+        String puntuacion;
         font.setColor(Color.WHITE);
         font.getData().setScale(1.5f);
-
-        String puntuacion = jugador1.getNombre() + ": " + jugador1.getPuntos() +
-                " - " + jugador2.getNombre() + ": " + jugador2.getPuntos();
-
+        if(miRol == TipoJugador.JUGADOR_1) {
+            puntuacion = jugador1.getNombre() + "TU: " + jugador1.getPuntos() +
+                    " - " + jugador2.getNombre() + "RIVAL: " + jugador2.getPuntos();
+        }
+        else{
+            puntuacion =  "TU: " + jugador2.getPuntos() +
+                    " - " +  "Rival: " + jugador1.getPuntos();
+        }
         GlyphLayout layout = new GlyphLayout(font, puntuacion);
 
         float x = (worldWidth - layout.width) / 2f;
