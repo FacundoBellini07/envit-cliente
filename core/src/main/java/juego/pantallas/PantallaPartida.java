@@ -33,6 +33,7 @@ public class PantallaPartida implements Screen, GameController {
     private Texture fondoPartida;
     private Texture mazoSprite;
     private Texture dorsoCartaSprite;
+    private Texture casilla;
     private boolean inicioRonda = true;
     private Animacion animacion;
 
@@ -95,6 +96,7 @@ public class PantallaPartida implements Screen, GameController {
         hc = new HiloCliente(this);
         hc.start();
 
+        casilla = new Texture(Gdx.files.internal("sprites/casilla.png"));
         fondoPartida = new Texture(Gdx.files.internal("fondos/fondoPartida.png"));
         mazoSprite = new Texture(Gdx.files.internal("sprites/mazo_sprite.png"));
         dorsoCartaSprite = new Texture(Gdx.files.internal("sprites/dorso.png"));
@@ -246,9 +248,9 @@ public class PantallaPartida implements Screen, GameController {
 
 
             this.batch.end();
-            // 2. DIBUJAR LOS FONDOS DE LAS ZONAS DE JUEGO
-            zonaJuegoJugador.renderFondo(shapeRenderer);
-            zonaJuegoRival.renderFondo(shapeRenderer);
+            zonaJuegoJugador.renderFondo(batch, casilla);
+            zonaJuegoRival.renderFondo(batch, casilla);
+
 
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
