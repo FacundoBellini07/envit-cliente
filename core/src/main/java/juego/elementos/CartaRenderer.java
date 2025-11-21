@@ -37,7 +37,6 @@ public class CartaRenderer {
         shapeRenderer.arc(limites.x + limites.width - r, limites.y + r, r, 270, 90);
         shapeRenderer.arc(limites.x + r, limites.y + limites.height - r, r, 90, 90);
         shapeRenderer.arc(limites.x + limites.width - r, limites.y + limites.height - r, r, 0, 90);
-
         shapeRenderer.end();
 
         batch.begin();
