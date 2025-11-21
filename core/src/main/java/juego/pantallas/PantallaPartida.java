@@ -111,7 +111,7 @@ public class PantallaPartida implements Screen, GameController {
         shapeRenderer = new ShapeRenderer();
         cartaRenderer = new CartaRenderer(batch, shapeRenderer, viewport);
 
-        hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
+        hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT, miRol);
 
         // ✅ Obtener fuentes del gestor centralizado
         GestorFuentes gestorFuentes = GestorFuentes.getInstancia();

@@ -19,23 +19,48 @@ public class HiloCliente extends Thread {
 
     private GameController listener;
 
+    // ✅ NUEVO: Variables para reintentos de conexión
+    private boolean conectado = false;
+    private Timer timerConexion;
+
     public HiloCliente(GameController listener) {
         try {
             this.listener = listener;
             ipserver = InetAddress.getByName("255.255.255.255");
             conexion = new DatagramSocket();
-            new Timer().scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    if (!fin) {
-                        enviarMensaje("PING");
-                    }
-                }
-            }, 1000, 1000);
+
+            // ✅ NUEVO: Iniciar reintentos de conexión
+            iniciarReintentos();
+
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
         }
-        enviarMensaje("Conexion");
+    }
+
+    /**
+     * ✅ NUEVO: Enviar mensajes de conexión constantemente hasta recibir OK
+     */
+    private void iniciarReintentos() {
+        timerConexion = new Timer();
+        timerConexion.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (!conectado) {
+                    System.out.println("[CLIENTE] Enviando solicitud de conexión...");
+                    enviarMensaje("Conexion");
+                }
+            }
+        }, 0, 1000); // Intentar cada 1 segundo
+    }
+
+    /**
+     * ✅ NUEVO: Detener los reintentos de conexión
+     */
+    private void detenerReintentos() {
+        if (timerConexion != null) {
+            timerConexion.cancel();
+            timerConexion = null;
+        }
     }
 
     public void enviarMensaje(String mensaje) {
@@ -68,8 +93,15 @@ public class HiloCliente extends Thread {
         System.out.println("[CLIENTE] <<<< RECIBIDO: " + mensaje);
 
         if (mensaje.equals("OK")) {
-            System.out.println("[CLIENTE] Conectado al servidor");
+            System.out.println("[CLIENTE] ✅ Conectado al servidor");
+
+            // ✅ NUEVO: Marcar como conectado y detener reintentos
+            conectado = true;
+            detenerReintentos();
+
             ipserver = dp.getAddress();
+
+            // ✅ Mantener PING activo durante la partida
             new Timer().scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
@@ -79,10 +111,13 @@ public class HiloCliente extends Thread {
                 }
             }, 1000, 1000);
         }
+        else if (mensaje.equals("FULL")) {
+            System.out.println("[CLIENTE] El servidor está lleno. Reintentar en 2 segundos...");
+            // Los reintentos continuarán automáticamente
+        }
         else if (mensaje.startsWith("ID:")) {
             procesarID(mensaje);
         }
-
         else if (mensaje.startsWith("EMPIEZA:")) {
             procesarEmpieza(mensaje);
         }
@@ -116,13 +151,16 @@ public class HiloCliente extends Thread {
                 listener.onJuegoTerminado(idGanador);
             }
         }
-        else if (mensaje.equals("FULL")) {
-            System.out.println("[CLIENTE] El servidor está lleno.");
-        }
         else if (mensaje.equals("RIVAL_SE_FUE")) {
             System.out.println("[CLIENTE] El rival se desconectó. Cerrando...");
-            listener.onVolverAlMenu();
 
+            // ✅ NUEVO: Reiniciar intentos de conexión después de que se fue el rival
+            conectado = false;
+            iniciarReintentos();
+
+            if (listener != null) {
+                listener.onVolverAlMenu();
+            }
         }
         else {
             System.out.println("[CLIENTE] ⚠️ Mensaje desconocido: " + mensaje);
@@ -150,20 +188,16 @@ public class HiloCliente extends Thread {
         mensaje = mensaje.replace("ESTADO:", "");
         String[] partes = mensaje.split(":");
 
-        // Formato antiguo: mano:p1:p2:estadoTurno:jugadorMano
-        // Formato nuevo: mano:p1:p2:estadoTurno:jugadorMano:trucoUsado:manoTruco
-
         TipoJugador jugadorMano = TipoJugador.valueOf(partes[4]);
 
         listener.onEstadoActualizado(
-                Integer.parseInt(partes[0]),  // mano
-                Integer.parseInt(partes[1]),  // p1
-                Integer.parseInt(partes[2]),  // p2
-                EstadoTurno.valueOf(partes[3]), // estadoTurno
-                jugadorMano                     // jugadorMano
+                Integer.parseInt(partes[0]),
+                Integer.parseInt(partes[1]),
+                Integer.parseInt(partes[2]),
+                EstadoTurno.valueOf(partes[3]),
+                jugadorMano
         );
 
-        // ✅ NUEVO: Procesar estado del truco si está presente
         if (partes.length >= 7) {
             boolean trucoUsado = partes[5].equals("1");
             int manoTruco = Integer.parseInt(partes[6]);
@@ -229,6 +263,7 @@ public class HiloCliente extends Thread {
 
     public void detener() {
         fin = true;
+        detenerReintentos();
         if (conexion != null && !conexion.isClosed()) {
             conexion.close();
         }

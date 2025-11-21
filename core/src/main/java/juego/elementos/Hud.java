@@ -5,10 +5,12 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import juego.personajes.Jugador;
+import juego.personajes.TipoJugador;
 import juego.utilidades.GestorFuentes;
 
 public class Hud {
 
+    private TipoJugador miRol;
     private BitmapFont fontGrande;
     private BitmapFont fontMediana;
     private BitmapFont fontPequeña;
@@ -28,12 +30,12 @@ public class Hud {
     // Posiciones
     private float margen = 20f;
 
-    public Hud(Jugador jugador1, Jugador jugador2, float worldWidth, float worldHeight) {
+    public Hud(Jugador jugador1, Jugador jugador2, float worldWidth, float worldHeight, TipoJugador miRol) {
         this.jugador1 = jugador1;
         this.jugador2 = jugador2;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
-
+        this.miRol = miRol;
         cargarFuentes();
     }
 
@@ -60,9 +62,13 @@ public class Hud {
     public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador,
                        boolean trucoActivo, int manoTruco) {
         batch.begin();
-
-        dibujarPuntosJugador(batch, jugador1.getPuntos());
-        dibujarPuntosRival(batch, jugador2.getPuntos());
+        if(miRol == TipoJugador.JUGADOR_1) {
+            dibujarPuntosJugador(batch, jugador1.getPuntos());
+            dibujarPuntosRival(batch, jugador2.getPuntos());
+        } else {
+            dibujarPuntosJugador(batch, jugador2.getPuntos());
+            dibujarPuntosRival(batch, jugador1.getPuntos());
+        }
         dibujarInfoMano(batch, manoActual);
         dibujarIndicadorTurno(batch, esTurnoJugador);
 
@@ -154,8 +160,6 @@ public class Hud {
     }
 
     public void dispose() {
-        // Las fuentes se liberan de forma centralizada
-        // No se hace nada aquí para evitar liberar fuentes que otros componentes podrían usar
         System.out.println("[HUD] Dispose llamado (fuentes no se liberan aquí, se liberan de forma centralizada)");
     }
 }
