@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import juego.utilidades.GestorFuentes;
 
 
 import java.util.Random;
@@ -83,13 +84,11 @@ public class PantallaMenu implements Screen {
 
     private void loadFont() {
         try {
-             FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fuentes/medieval.ttf"));
-            FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-            parameter.size = 36;
-            font = generator.generateFont(parameter);
-            generator.dispose();
+            GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
+            font = gestorFuentes.getMenuTitle();  // Fuente de 36px para menú
+            Gdx.app.log("PantallaMenu", "Fuente medieval.ttf cargada desde el gestor");
         } catch (Exception e) {
-            font = new BitmapFont(); // fallback default
+            font = new BitmapFont();
             Gdx.app.log("PantallaMenu", "No se pudo cargar la fuente medieval.ttf, usando fuente por defecto");
         }
     }

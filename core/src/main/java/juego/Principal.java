@@ -3,6 +3,7 @@ package juego;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import juego.pantallas.PantallaMenu;
+import juego.utilidades.GestorFuentes;
 
 public class Principal extends Game {
 
@@ -23,6 +24,7 @@ public class Principal extends Game {
 	public void dispose() {
 		batch.dispose();
 		super.dispose();
+        GestorFuentes.getInstancia().dispose();
         System.out.println("Cerrando juego completamente...");
         System.exit(0);
 	}

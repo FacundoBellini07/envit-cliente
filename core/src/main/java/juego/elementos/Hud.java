@@ -1,12 +1,11 @@
 package juego.elementos;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import juego.personajes.Jugador;
+import juego.utilidades.GestorFuentes;
 
 public class Hud {
 
@@ -40,37 +39,18 @@ public class Hud {
 
     private void cargarFuentes() {
         try {
-            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
-                    Gdx.files.internal("fuentes/medieval.ttf")
-            );
+            // ✅ Obtener fuentes del gestor centralizado
+            GestorFuentes gestor = GestorFuentes.getInstancia();
 
-            // Fuente grande para mensajes importantes
-            FreeTypeFontGenerator.FreeTypeFontParameter paramGrande =
-                    new FreeTypeFontGenerator.FreeTypeFontParameter();
-            paramGrande.size = 48;
-            paramGrande.borderWidth = 2;
-            paramGrande.borderColor = Color.BLACK;
-            fontGrande = generator.generateFont(paramGrande);
+            this.fontGrande = gestor.getGrande();
+            this.fontMediana = gestor.getMediana();
+            this.fontPequeña = gestor.getPequeña();
 
-            // Fuente mediana para información del juego
-            FreeTypeFontGenerator.FreeTypeFontParameter paramMediana =
-                    new FreeTypeFontGenerator.FreeTypeFontParameter();
-            paramMediana.size = 32;
-            paramMediana.borderWidth = 1;
-            paramMediana.borderColor = Color.BLACK;
-            fontMediana = generator.generateFont(paramMediana);
-
-            // Fuente pequeña para detalles
-            FreeTypeFontGenerator.FreeTypeFontParameter paramPequeña =
-                    new FreeTypeFontGenerator.FreeTypeFontParameter();
-            paramPequeña.size = 24;
-            fontPequeña = generator.generateFont(paramPequeña);
-
-            generator.dispose();
-
-            System.out.println("[HUD] Fuentes medieval.ttf cargadas correctamente");
+            System.out.println("[HUD] ✅ Fuentes medieval.ttf cargadas correctamente desde AplicarFuentes");
         } catch (Exception e) {
-            System.err.println("[HUD] Error cargando fuentes: " + e.getMessage());
+            System.err.println("[HUD] ❌ Error cargando fuentes: " + e.getMessage());
+
+            // Fallback: crear fuentes por defecto
             fontGrande = new BitmapFont();
             fontMediana = new BitmapFont();
             fontPequeña = new BitmapFont();
@@ -174,8 +154,8 @@ public class Hud {
     }
 
     public void dispose() {
-        if (fontGrande != null) fontGrande.dispose();
-        if (fontMediana != null) fontMediana.dispose();
-        if (fontPequeña != null) fontPequeña.dispose();
+        // Las fuentes se liberan de forma centralizada
+        // No se hace nada aquí para evitar liberar fuentes que otros componentes podrían usar
+        System.out.println("[HUD] Dispose llamado (fuentes no se liberan aquí, se liberan de forma centralizada)");
     }
 }

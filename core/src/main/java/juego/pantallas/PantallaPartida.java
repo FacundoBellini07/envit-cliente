@@ -19,6 +19,7 @@ import juego.personajes.Jugador;
 import juego.personajes.RivalBot;
 import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
+import juego.utilidades.GestorFuentes;
 import juego.utilidades.GestorSonido;
 import juego.elementos.Hud;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class PantallaPartida implements Screen, GameController {
     private Texture fondoPartida;
     private Texture mazoSprite;
     private Texture dorsoCartaSprite;
+    private Texture casilla;
     private boolean inicioRonda = true;
     private Animacion animacion;
 
@@ -95,6 +97,7 @@ public class PantallaPartida implements Screen, GameController {
         hc = new HiloCliente(this);
         hc.start();
 
+        casilla = new Texture(Gdx.files.internal("sprites/casilla.png"));
         fondoPartida = new Texture(Gdx.files.internal("fondos/fondoPartida.png"));
         mazoSprite = new Texture(Gdx.files.internal("sprites/mazo_sprite.png"));
         dorsoCartaSprite = new Texture(Gdx.files.internal("sprites/dorso.png"));
@@ -108,8 +111,12 @@ public class PantallaPartida implements Screen, GameController {
         cartaRenderer = new CartaRenderer(batch, shapeRenderer, viewport);
 
         hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
-        BitmapFont fontBotonTruco = crearFuenteMedieval(28);
-        fontBotonTruco = crearFuenteMedieval(20);
+
+        // ✅ CAMBIO: Usar el gestor de fuentes en lugar de crearlas aquí
+        GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
+        fontBotonTruco = gestorFuentes.getBoton20();  // Fuente de 20px para el botón
+        font = gestorFuentes.getMediana();             // Fuente mediana para mensajes (32px)
+
         // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
         float zonaAlto = CARTA_ALTO * 1.3f;
@@ -125,7 +132,7 @@ public class PantallaPartida implements Screen, GameController {
         zonaJuegoRival.setCartaRenderer(cartaRenderer);
 
         manoManager = new ManoManager(
-                jugadores.get(0),  // Siempre el índice 0 es "yo"
+                jugadores.get(0),
                 cartaRenderer,
                 viewport,
                 WORLD_WIDTH,
@@ -144,7 +151,6 @@ public class PantallaPartida implements Screen, GameController {
                 CARTA_ANCHO,
                 CARTA_ALTO
         );
-
 
         animacion = new Animacion(
                 WORLD_WIDTH,
@@ -167,7 +173,7 @@ public class PantallaPartida implements Screen, GameController {
                 btnTrucoY,
                 btnTrucoAncho,
                 btnTrucoAlto,
-                fontBotonTruco,  // Usar la fuente creada
+                fontBotonTruco,  // Ahora garantizado que no es null
                 viewport,
                 partida,
                 hc
@@ -202,9 +208,9 @@ public class PantallaPartida implements Screen, GameController {
                 batch.setProjectionMatrix(viewport.getCamera().combined);
                 batch.begin();
 
+                // ✅ Ahora font NUNCA es null porque viene del gestor
                 font.getData().setScale(2.0f);
                 font.setColor(Color.RED);
-                // Ajusta las coordenadas X,Y según necesites para centrarlo
                 font.draw(batch, "¡RIVAL DESCONECTADO!", WORLD_WIDTH / 2f - 180, WORLD_HEIGHT / 2f + 50);
 
                 font.getData().setScale(1.2f);
@@ -246,9 +252,9 @@ public class PantallaPartida implements Screen, GameController {
 
 
             this.batch.end();
-            // 2. DIBUJAR LOS FONDOS DE LAS ZONAS DE JUEGO
-            zonaJuegoJugador.renderFondo(shapeRenderer);
-            zonaJuegoRival.renderFondo(shapeRenderer);
+            zonaJuegoJugador.renderFondo(batch, casilla);
+            zonaJuegoRival.renderFondo(batch, casilla);
+
 
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);

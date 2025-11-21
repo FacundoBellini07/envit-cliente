@@ -43,9 +43,6 @@ public class GestorSonido {
         return instancia;
     }
 
-    /**
-     * Carga una música de fondo
-     */
     public void cargarMusica(String nombre, String rutaArchivo) {
         try {
             if (Gdx.files.internal(rutaArchivo).exists()) {
