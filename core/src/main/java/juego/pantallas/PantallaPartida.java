@@ -2,6 +2,7 @@ package juego.pantallas;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -18,7 +19,8 @@ import juego.personajes.Jugador;
 import juego.personajes.RivalBot;
 import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
-
+import juego.utilidades.GestorSonido;
+import juego.elementos.Hud;
 import java.util.ArrayList;
 
 public class PantallaPartida implements Screen, GameController {
@@ -47,6 +49,7 @@ public class PantallaPartida implements Screen, GameController {
 
     private Hud hud;
     private BitmapFont font;
+    private BitmapFont fontBotonTruco;
 
     private final float WORLD_WIDTH = 640;
     private final float WORLD_HEIGHT = 480;
@@ -104,10 +107,9 @@ public class PantallaPartida implements Screen, GameController {
         shapeRenderer = new ShapeRenderer();
         cartaRenderer = new CartaRenderer(batch, shapeRenderer, viewport);
 
-        font = new BitmapFont();
-        font.getData().setScale(1.2f);
-        hud = new Hud(font, jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
-
+        hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT);
+        BitmapFont fontBotonTruco = crearFuenteMedieval(28);
+        fontBotonTruco = crearFuenteMedieval(20);
         // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
         float zonaAlto = CARTA_ALTO * 1.3f;
@@ -165,19 +167,14 @@ public class PantallaPartida implements Screen, GameController {
                 btnTrucoY,
                 btnTrucoAncho,
                 btnTrucoAlto,
-                font,
+                fontBotonTruco,  // Usar la fuente creada
                 viewport,
                 partida,
                 hc
         );
 
         pantallaFinal = new PantallaFinal(
-                font,
-                viewport,
-                hud,
-                WORLD_WIDTH,
-                WORLD_HEIGHT,
-                miRol
+                viewport, hud, WORLD_WIDTH, WORLD_HEIGHT, miRol
         );
 
         partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
@@ -343,7 +340,24 @@ public class PantallaPartida implements Screen, GameController {
             }
         }
     }
-
+    private BitmapFont crearFuenteMedieval(int tamaño) {
+        try {
+            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                    Gdx.files.internal("fuentes/medieval.ttf")
+            );
+            FreeTypeFontGenerator.FreeTypeFontParameter parameter =
+                    new FreeTypeFontGenerator.FreeTypeFontParameter();
+            parameter.size = tamaño;
+            parameter.borderWidth = 1;
+            parameter.borderColor = Color.BLACK;
+            BitmapFont font = generator.generateFont(parameter);
+            generator.dispose();
+            return font;
+        } catch (Exception e) {
+            System.err.println("[PARTIDA] Error cargando fuente: " + e.getMessage());
+            return new BitmapFont();
+        }
+    }
 
     private void volverAlMenu() {
         debeVolverAlMenu = true;
@@ -510,13 +524,15 @@ public class PantallaPartida implements Screen, GameController {
 
     @Override
     public void dispose() {
+        if (fontBotonTruco != null) fontBotonTruco.dispose();
         if (fondoPartida != null) fondoPartida.dispose();
         if (mazoSprite != null) mazoSprite.dispose();
         if (batch != null) batch.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
-        if (font != null) font.dispose();
+        if (hud != null) hud.dispose(); // ← AGREGAR ESTA LÍNEA
         if (hc != null) {
             hc.detener();
         }
+
     }
 }

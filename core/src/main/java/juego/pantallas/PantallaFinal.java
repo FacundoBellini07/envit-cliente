@@ -1,6 +1,6 @@
 package juego.pantallas;
-import juego.elementos.Hud;
 
+import juego.elementos.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -8,18 +8,18 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.personajes.Jugador;
 import juego.personajes.TipoJugador;
 
-/**
- * Pantalla de fin de partida que muestra el resultado final
- * y permite volver al menú
- */
 public class PantallaFinal {
 
-    private BitmapFont font;
+    private BitmapFont fontTitulo;
+    private BitmapFont fontTexto;
+    private BitmapFont fontPequeño;
+
     private Viewport viewport;
     private Hud hud;
 
@@ -31,6 +31,7 @@ public class PantallaFinal {
     private final float TIEMPO_ANTES_PERMITIR_SALIDA = 5.0f;
     private final float TIEMPO_AUTO_RETORNO = 10.0f;
     private TipoJugador miRol;
+
     // Jugadores
     private Jugador ganador;
     private Jugador jugador1;
@@ -44,14 +45,54 @@ public class PantallaFinal {
     // Estado
     private boolean activa = false;
 
-    public PantallaFinal(BitmapFont font, Viewport viewport, Hud hud,
+    public PantallaFinal(Viewport viewport, Hud hud,
                          float worldWidth, float worldHeight, TipoJugador miRol) {
-        this.font = font;
         this.viewport = viewport;
         this.hud = hud;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
         this.miRol = miRol;
+
+        cargarFuentes();
+    }
+
+    private void cargarFuentes() {
+        try {
+            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                    Gdx.files.internal("fuentes/medieval.ttf")
+            );
+
+            // Fuente para título grande (victoria/derrota)
+            FreeTypeFontGenerator.FreeTypeFontParameter paramTitulo =
+                    new FreeTypeFontGenerator.FreeTypeFontParameter();
+            paramTitulo.size = 64;
+            paramTitulo.borderWidth = 3;
+            paramTitulo.borderColor = Color.BLACK;
+            fontTitulo = generator.generateFont(paramTitulo);
+
+            // Fuente para texto normal
+            FreeTypeFontGenerator.FreeTypeFontParameter paramTexto =
+                    new FreeTypeFontGenerator.FreeTypeFontParameter();
+            paramTexto.size = 36;
+            paramTexto.borderWidth = 1;
+            paramTexto.borderColor = Color.BLACK;
+            fontTexto = generator.generateFont(paramTexto);
+
+            // Fuente pequeña para instrucciones
+            FreeTypeFontGenerator.FreeTypeFontParameter paramPequeño =
+                    new FreeTypeFontGenerator.FreeTypeFontParameter();
+            paramPequeño.size = 24;
+            fontPequeño = generator.generateFont(paramPequeño);
+
+            generator.dispose();
+
+            System.out.println("[PANTALLA_FINAL] Fuentes medieval.ttf cargadas correctamente");
+        } catch (Exception e) {
+            System.err.println("[PANTALLA_FINAL] Error cargando fuentes: " + e.getMessage());
+            fontTitulo = new BitmapFont();
+            fontTexto = new BitmapFont();
+            fontPequeño = new BitmapFont();
+        }
     }
 
     public void activar(Jugador ganador, Jugador jugador1, Jugador jugador2) {
@@ -61,8 +102,6 @@ public class PantallaFinal {
         this.activa = true;
         this.tiempoTranscurrido = 0f;
     }
-
-
 
     public boolean update(float delta) {
         if (!activa) {
@@ -86,9 +125,6 @@ public class PantallaFinal {
         return false;
     }
 
-    /**
-     * Renderiza la pantalla final
-     */
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         if (!activa) {
             return;
@@ -107,9 +143,6 @@ public class PantallaFinal {
         renderInstrucciones(batch);
     }
 
-    /**
-     * Dibuja el overlay oscuro de fondo
-     */
     private void renderOverlay(ShapeRenderer shapeRenderer) {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -123,50 +156,50 @@ public class PantallaFinal {
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
-    /**
-     * Dibuja el mensaje principal (VICTORIA/DERROTA)
-     */
     private void renderMensajePrincipal(SpriteBatch batch) {
         boolean ganoJugador1 = (ganador == jugador1);
         String mensaje = ganoJugador1 ? "¡VICTORIA!" : "DERROTA";
         Color colorMensaje = ganoJugador1 ? colorVictoria : colorDerrota;
 
-        hud.dibujarMensajeCentral(batch, mensaje, colorMensaje);
-    }
-
-    /**
-     * Dibuja la puntuación final
-     */
-    private void renderPuntuacion(SpriteBatch batch) {
         batch.begin();
-        String puntuacion;
-        font.setColor(Color.WHITE);
-        font.getData().setScale(1.5f);
-        if(miRol == TipoJugador.JUGADOR_1) {
-            puntuacion = jugador1.getNombre() + "TU: " + jugador1.getPuntos() +
-                    " - " + jugador2.getNombre() + "RIVAL: " + jugador2.getPuntos();
-        }
-        else{
-            puntuacion =  "TU: " + jugador2.getPuntos() +
-                    " - " +  "Rival: " + jugador1.getPuntos();
-        }
-        GlyphLayout layout = new GlyphLayout(font, puntuacion);
+
+        fontTitulo.setColor(colorMensaje);
+        GlyphLayout layout = new GlyphLayout(fontTitulo, mensaje);
 
         float x = (worldWidth - layout.width) / 2f;
-        float y = worldHeight / 2f - 50f;
+        float y = (worldHeight + layout.height) / 2f + 50;
 
-        font.draw(batch, puntuacion, x, y);
+        fontTitulo.draw(batch, mensaje, x, y);
 
         batch.end();
     }
 
-    /**
-     * Dibuja las instrucciones de salida
-     */
+    private void renderPuntuacion(SpriteBatch batch) {
+        batch.begin();
+
+        String puntuacion;
+        fontTexto.setColor(Color.WHITE);
+
+        if(miRol == TipoJugador.JUGADOR_1) {
+            puntuacion = "TU: " + jugador1.getPuntos() + " - RIVAL: " + jugador2.getPuntos();
+        } else {
+            puntuacion = "TU: " + jugador2.getPuntos() + " - RIVAL: " + jugador1.getPuntos();
+        }
+
+        GlyphLayout layout = new GlyphLayout(fontTexto, puntuacion);
+
+        float x = (worldWidth - layout.width) / 2f;
+        float y = worldHeight / 2f - 50f;
+
+        fontTexto.draw(batch, puntuacion, x, y);
+
+        batch.end();
+    }
+
     private void renderInstrucciones(SpriteBatch batch) {
         batch.begin();
 
-        font.getData().setScale(1.0f);
+        fontPequeño.setColor(Color.WHITE);
         String mensaje;
 
         if (tiempoTranscurrido < TIEMPO_ANTES_PERMITIR_SALIDA) {
@@ -178,30 +211,22 @@ public class PantallaFinal {
             mensaje = "Presiona cualquier tecla para continuar";
         }
 
-        GlyphLayout layout = new GlyphLayout(font, mensaje);
+        GlyphLayout layout = new GlyphLayout(fontPequeño, mensaje);
         float x = (worldWidth - layout.width) / 2f;
-        float y = 50f;
+        float y = 80f;
 
-        font.draw(batch, mensaje, x, y);
+        fontPequeño.draw(batch, mensaje, x, y);
 
         batch.end();
     }
 
-    /**
-     * Verifica si la pantalla está activa
-     */
     public boolean isActiva() {
         return activa;
     }
 
-    /**
-     * Obtiene el tiempo transcurrido
-     */
     public float getTiempoTranscurrido() {
         return tiempoTranscurrido;
     }
-
-    // Setters para personalización
 
     public void setColorVictoria(Color color) {
         this.colorVictoria = color;
@@ -213,5 +238,11 @@ public class PantallaFinal {
 
     public void setColorFondoOverlay(Color color) {
         this.colorFondoOverlay = color;
+    }
+
+    public void dispose() {
+        if (fontTitulo != null) fontTitulo.dispose();
+        if (fontTexto != null) fontTexto.dispose();
+        if (fontPequeño != null) fontPequeño.dispose();
     }
 }
