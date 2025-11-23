@@ -152,14 +152,18 @@ public class HiloCliente extends Thread {
             }
         }
         else if (mensaje.equals("RIVAL_SE_FUE")) {
-            System.out.println("[CLIENTE] El rival se desconectó. Cerrando...");
+            System.out.println("[CLIENTE] El rival se desconectó. Cerrando hilo...");
 
-            // ✅ NUEVO: Reiniciar intentos de conexión después de que se fue el rival
-            conectado = false;
-            iniciarReintentos();
+
+            fin = true;
+            detenerReintentos();
+
+            if (conexion != null && !conexion.isClosed()) {
+                conexion.close(); // Cierra el socket
+            }
 
             if (listener != null) {
-                listener.onVolverAlMenu();
+                listener.onVolverAlMenu(); // La UI se encarga de permitir crear uno nuevo
             }
         }
         else {
@@ -267,5 +271,6 @@ public class HiloCliente extends Thread {
         if (conexion != null && !conexion.isClosed()) {
             conexion.close();
         }
+        System.out.println("[CLIENTE] Hilo detenido correctamente.");
     }
 }
