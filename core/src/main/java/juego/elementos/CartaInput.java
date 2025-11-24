@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.math.Rectangle;
 import juego.red.HiloCliente;
+import juego.utilidades.GestorSonido;
 
 public class CartaInput implements InputProcessor {
 
@@ -72,7 +73,7 @@ public class CartaInput implements InputProcessor {
 
         if (limitesCarta.contains(touchPoint.x, touchPoint.y)) {
             isDragging = true;
-
+            GestorSonido.getInstancia().reproducirSonido("carta");
             posicionOriginalX = limitesCarta.x;
             posicionOriginalY = limitesCarta.y;
 

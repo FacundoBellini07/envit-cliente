@@ -148,6 +148,7 @@ public class GestorSonido {
         if (musicaActual != null) {
             musicaActual.setVolume(this.volumenMusica);
         }
+
         System.out.println("[SONIDO] Volumen música: " + (int)(this.volumenMusica * 100) + "%");
     }
 

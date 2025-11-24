@@ -121,7 +121,7 @@ public class PantallaPartida implements Screen, GameController {
         GestorSonido gestorSonido = GestorSonido.getInstancia();
         gestorSonido.cargarMusica("partida", "sounds/musicaF.wav");
         gestorSonido.cargarSonido("carta", "sounds/carta.wav");
-        gestorSonido.cargarSonido("truco", "sounds/truco.wav");
+        gestorSonido.cargarSonido("truco", "sounds/truco.mp3");
         gestorSonido.cargarSonido("victoria", "sounds/victoria.wav");
         gestorSonido.cargarSonido("derrota", "sounds/derrota.wav");
 
@@ -513,8 +513,10 @@ public class PantallaPartida implements Screen, GameController {
         // Si el ID del ganador coincide con MI ID asignado (miID)
         if (idGanador == this.miID) {
             objetoGanador = jugadores.get(0); // Jugador 0 siempre soy "YO" en mi lista local
+            GestorSonido.getInstancia().reproducirSonido("victoria");
         } else {
             objetoGanador = jugadores.get(1); // Jugador 1 siempre es "RIVAL" en mi lista local
+            GestorSonido.getInstancia().reproducirSonido("derrota");
         }
 
         // Activar la pantalla final

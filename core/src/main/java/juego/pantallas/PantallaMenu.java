@@ -51,7 +51,7 @@ public class PantallaMenu implements Screen {
     private Rectangle chkShakeBox = new Rectangle();
     private Rectangle chkMusicBox = new Rectangle();
 
-    // ✅ NUEVO: Barra de volumen
+    //  Barra de volumen
     private Rectangle sliderBarRect = new Rectangle();
     private Rectangle sliderKnobRect = new Rectangle();
     private boolean draggingVolume = false;
@@ -61,7 +61,7 @@ public class PantallaMenu implements Screen {
     private Texture titleTexture;
     private Texture whitePixel;
 
-    // ✅ NUEVO: Gestor de sonido
+    //  Gestor de sonido
     private GestorSonido gestorSonido;
 
     public PantallaMenu(final Principal game) {
@@ -70,7 +70,7 @@ public class PantallaMenu implements Screen {
         shapeRenderer = new ShapeRenderer();
         viewport = new FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
-        // ✅ Inicializar gestor de sonido
+        // Inicializar gestor de sonido
         gestorSonido = GestorSonido.getInstancia();
 
         loadFont();
@@ -131,20 +131,20 @@ public class PantallaMenu implements Screen {
 
         // Checkboxes en opciones
         float chkW = 56, chkH = 56;
-        float chkEspacio = 48;
+        float chkEspacio = 40;
         float chkX = w / 2.5f - chkW / 2f;
-        float chkStartY = h / 2f + 80;
+        float chkStartY = h / 2.5f;
 
         chkCRTBox.set(chkX, chkStartY, chkW, chkH);
         chkFlickerBox.set(chkX, chkStartY - (chkH + chkEspacio), chkW, chkH);
         chkShakeBox.set(chkX, chkStartY - 2 * (chkH + chkEspacio), chkW, chkH);
         chkMusicBox.set(chkX, chkStartY - 3 * (chkH + chkEspacio), chkW, chkH);
 
-        // ✅ NUEVO: Barra de volumen
+        //  Barra de volumen
         float sliderW = 300;
         float sliderH = 20;
-        float sliderX = w / 2.5f - sliderW / 2f;
-        float sliderY = chkStartY - 4 * (chkH + chkEspacio) - 20;
+        float sliderX = w / 5f - sliderW / 1.5f;
+        float sliderY = chkStartY;
         sliderBarRect.set(sliderX, sliderY, sliderW, sliderH);
 
         // Knob del slider
@@ -226,7 +226,7 @@ public class PantallaMenu implements Screen {
             drawCheckbox(batch, chkShakeBox, shakeEnabled, "Temblor");
             drawCheckbox(batch, chkMusicBox, gestorSonido.isMusicaHabilitada(), "Musica");
 
-            // ✅ Etiqueta de volumen
+            // Etiqueta de volumen
             font.setColor(Color.WHITE);
             font.getData().setScale(1.0f);
             font.draw(batch, "Volumen", sliderBarRect.x, sliderBarRect.y + 60);
@@ -234,7 +234,7 @@ public class PantallaMenu implements Screen {
 
         batch.end();
 
-        // ✅ Dibujar barra de volumen (con ShapeRenderer)
+        // Dibujar barra de volumen (con ShapeRenderer)
         if (inOptionsMode) {
             drawVolumeSlider();
         }
@@ -306,7 +306,7 @@ public class PantallaMenu implements Screen {
         }
     }
 
-    // ✅ NUEVO: Dibuja la barra de volumen con shader
+    //  Dibuja la barra de volumen con shader
     private void drawVolumeSlider() {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -353,7 +353,7 @@ public class PantallaMenu implements Screen {
         float x = touch.x;
         float y = touch.y;
 
-        // ✅ NUEVO: Manejar arrastre del slider de volumen
+        //  Manejar arrastre del slider de volumen
         if (inOptionsMode) {
             if (Gdx.input.isTouched()) {
 
