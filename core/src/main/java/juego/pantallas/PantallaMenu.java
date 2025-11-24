@@ -1,5 +1,6 @@
 package juego.pantallas;
 
+import com.badlogic.gdx.audio.Sound;
 import juego.Principal;
 import juego.utilidades.GestorSonido;
 import com.badlogic.gdx.Gdx;
@@ -154,7 +155,7 @@ public class PantallaMenu implements Screen {
 
     private void cargarSonidos() {
 
-        gestorSonido.cargarMusica("menu","sounds/musicaF.wav");
+        gestorSonido.cargarMusica("menu","sounds/fuego.mp3");
         gestorSonido.cargarSonido("click","sounds/click.wav");
         gestorSonido.reproducirMusica("menu");
     }
@@ -163,6 +164,7 @@ public class PantallaMenu implements Screen {
     public void resize(int width, int height) {
         viewport.update(width, height, true);
         setButtonRects();
+
     }
 
     @Override
@@ -222,7 +224,7 @@ public class PantallaMenu implements Screen {
             drawCheckbox(batch, chkCRTBox, crtEnabled, "Efectos CRT");
             drawCheckbox(batch, chkFlickerBox, flickerEnabled, "Destellos");
             drawCheckbox(batch, chkShakeBox, shakeEnabled, "Temblor");
-            drawCheckbox(batch, chkMusicBox, gestorSonido.isMusicaHabilitada(), "Música");
+            drawCheckbox(batch, chkMusicBox, gestorSonido.isMusicaHabilitada(), "Musica");
 
             // ✅ Etiqueta de volumen
             font.setColor(Color.WHITE);
@@ -354,6 +356,7 @@ public class PantallaMenu implements Screen {
         // ✅ NUEVO: Manejar arrastre del slider de volumen
         if (inOptionsMode) {
             if (Gdx.input.isTouched()) {
+
                 if (draggingVolume || sliderBarRect.contains(x, y) || sliderKnobRect.contains(x, y)) {
                     draggingVolume = true;
 
