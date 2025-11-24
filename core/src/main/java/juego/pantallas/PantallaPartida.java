@@ -2,7 +2,6 @@ package juego.pantallas;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.Game;
@@ -20,8 +19,8 @@ import juego.personajes.Jugador;
 import juego.personajes.RivalBot;
 import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
-import juego.utilidades.GestorSonido;
 import juego.utilidades.GestorFuentes;
+import juego.utilidades.GestorSonido;
 import juego.elementos.Hud;
 import java.util.ArrayList;
 
@@ -51,8 +50,8 @@ public class PantallaPartida implements Screen, GameController {
     private ZonaJuego zonaJuegoJugador;
 
     private Hud hud;
-    private BitmapFont fontBotonTruco;
     private BitmapFont font;
+    private BitmapFont fontBotonTruco;
 
     private final float WORLD_WIDTH = 640;
     private final float WORLD_HEIGHT = 480;
@@ -113,10 +112,21 @@ public class PantallaPartida implements Screen, GameController {
 
         hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT, miRol);
 
-        // ✅ Obtener fuentes del gestor centralizado
+        //  Obtener fuentes del gestor centralizado
         GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
         fontBotonTruco = gestorFuentes.getBoton20();
         font = gestorFuentes.getMediana();
+
+        //  Cargar sonidos para la partida
+        GestorSonido gestorSonido = GestorSonido.getInstancia();
+        gestorSonido.cargarMusica("partida", "sounds/musicaF.wav");
+        gestorSonido.cargarSonido("carta", "sounds/carta.wav");
+        gestorSonido.cargarSonido("truco", "sounds/truco.wav");
+        gestorSonido.cargarSonido("victoria", "sounds/victoria.wav");
+        gestorSonido.cargarSonido("derrota", "sounds/derrota.wav");
+
+        //  Reproducir música de partida (opcional, si quieres música diferente al menú)
+        // gestorSonido.reproducirMusica("partida");
 
         // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
@@ -173,18 +183,13 @@ public class PantallaPartida implements Screen, GameController {
         partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
-
-    /**
-     * ✅ NUEVO: Método para crear/recrear el botón Truco
-     * Útil para cuando se reconecta después de desconexión
-     */
     private void crearBotonTruco() {
         float btnTrucoAncho = 80f;
         float btnTrucoAlto = 60f;
         float margenIzq = 20f;
         float btnTrucoY = (WORLD_HEIGHT - btnTrucoAlto) / 2f;
 
-        // ✅ Asegurar que fontBotonTruco no sea null
+        //  Asegurar que fontBotonTruco no sea null
         if (fontBotonTruco == null) {
             GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
             fontBotonTruco = gestorFuentes.getBoton20();
@@ -217,8 +222,6 @@ public class PantallaPartida implements Screen, GameController {
                 dispose();
                 return;
             }
-
-            // ✅ MEJORADO: Pantalla de rival desconectado con mensajes centrados
             if (rivalDesconectado) {
                 Gdx.gl.glClearColor(0, 0, 0, 1);
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -226,24 +229,14 @@ public class PantallaPartida implements Screen, GameController {
                 batch.setProjectionMatrix(viewport.getCamera().combined);
                 batch.begin();
 
-                GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
-                BitmapFont fontMensaje = gestorFuentes.getPequeña();  // 24px
+                font.getData().setScale(2.0f);
+                font.setColor(Color.RED);
+                // Ajusta las coordenadas X,Y según necesites para centrarlo
+                font.draw(batch, "¡RIVAL DESCONECTADO!", WORLD_WIDTH / 2f - 180, WORLD_HEIGHT / 2f + 50);
 
-                // Título - Rival Desconectado
-                fontMensaje.getData().setScale(1.5f);
-                fontMensaje.setColor(Color.RED);
-                GlyphLayout layoutTitulo = new GlyphLayout(fontMensaje, "¡RIVAL DESCONECTADO!");
-                float xTitulo = (WORLD_WIDTH - layoutTitulo.width) / 2f;
-                float yTitulo = WORLD_HEIGHT / 2f + 40;
-                fontMensaje.draw(batch, "¡RIVAL DESCONECTADO!", xTitulo, yTitulo);
-
-                // Instrucción - centrada y más pequeña
-                fontMensaje.getData().setScale(1.0f);
-                fontMensaje.setColor(Color.WHITE);
-                GlyphLayout layoutInstruccion = new GlyphLayout(fontMensaje, "Toca la pantalla para volver al menú");
-                float xInstruccion = (WORLD_WIDTH - layoutInstruccion.width) / 2f;
-                float yInstruccion = WORLD_HEIGHT / 2f - 20;
-                fontMensaje.draw(batch, "Toca la pantalla para volver al menú", xInstruccion, yInstruccion);
+                font.getData().setScale(1.2f);
+                font.setColor(Color.WHITE);
+                font.draw(batch, "Toca la pantalla para volver al menú", WORLD_WIDTH / 2f - 160, WORLD_HEIGHT / 2f - 50);
 
                 batch.end();
 
@@ -257,6 +250,7 @@ public class PantallaPartida implements Screen, GameController {
             update(delta);
             Gdx.gl.glClearColor(0, 0.1f, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
 
             if (pantallaFinal.isActiva()) {
                 pantallaFinal.render(batch, shapeRenderer);
@@ -277,9 +271,11 @@ public class PantallaPartida implements Screen, GameController {
             animacion.render(batch);
             batch.draw(mazoSprite, mazoX, mazoY, mazoAncho, mazoAlto);
 
+
             this.batch.end();
             zonaJuegoJugador.renderFondo(batch, casilla);
             zonaJuegoRival.renderFondo(batch, casilla);
+
 
             // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -290,6 +286,7 @@ public class PantallaPartida implements Screen, GameController {
             manoManager.render();
             zonaJuegoJugador.renderCartas();
             zonaJuegoRival.renderCartas();
+
 
             botonTruco.render(batch, shapeRenderer);
 
@@ -337,7 +334,7 @@ public class PantallaPartida implements Screen, GameController {
             return;
         }
 
-        // ✅ Inicialización de la mano
+        //  CORREGIDO: Inicialización de la mano
         if (inicioRonda) {
             Carta[] miMano = jugadores.get(0).getMano();
 
@@ -352,11 +349,14 @@ public class PantallaPartida implements Screen, GameController {
             System.out.println("[UPDATE] inicioRonda=true, cartas disponibles: " + cartasDisponibles);
 
             if (cartasDisponibles == 3) {
-                System.out.println("[UPDATE] ✅ Inicializando mano con 3 cartas");
+                System.out.println("[UPDATE]  Inicializando mano con 3 cartas");
 
+                //  IMPORTANTE: Limpiar el InputMultiplexer antes de reinicializar
                 manoManager.getInputMultiplexer().clear();
+
                 manoManager.inicializarMano();
 
+                //  IMPORTANTE: Asegurarse de que el InputProcessor esté activo
                 Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
 
                 animacion.iniciarAnimacionReparto();
@@ -366,6 +366,28 @@ public class PantallaPartida implements Screen, GameController {
                 System.out.println("[UPDATE] InputProcessor configurado correctamente");
             }
         }
+    }
+    private BitmapFont crearFuenteMedieval(int tamaño) {
+        try {
+            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                    Gdx.files.internal("fuentes/medieval.ttf")
+            );
+            FreeTypeFontGenerator.FreeTypeFontParameter parameter =
+                    new FreeTypeFontGenerator.FreeTypeFontParameter();
+            parameter.size = tamaño;
+            parameter.borderWidth = 1;
+            parameter.borderColor = Color.BLACK;
+            BitmapFont font = generator.generateFont(parameter);
+            generator.dispose();
+            return font;
+        } catch (Exception e) {
+            System.err.println("[PARTIDA] Error cargando fuente: " + e.getMessage());
+            return new BitmapFont();
+        }
+    }
+
+    private void volverAlMenu() {
+        debeVolverAlMenu = true;
     }
 
     @Override
@@ -382,15 +404,16 @@ public class PantallaPartida implements Screen, GameController {
         System.out.println("[CLIENTE] Partida iniciada. Mi rol: " + miRol + ", Empieza: " + tipoMano);
         System.out.println("[CLIENTE] inicioRonda marcado como true");
     }
-
     public void onConectado(int id) {
         this.miID = id;
         if (miID == 0) {
+            // Yo soy el Jugador 1
             this.miRol = TipoJugador.JUGADOR_1;
             jugadores.get(0).setNombre("Tú (J1)");
             jugadores.get(1).setNombre("Rival (J2)");
             System.out.println("[CLIENTE] Conectado como Jugador 1");
         } else {
+            // Yo soy el Jugador 2
             this.miRol = TipoJugador.JUGADOR_2;
             jugadores.get(0).setNombre("Rival (J1)");
             jugadores.get(1).setNombre("Tú (J2)");
@@ -402,13 +425,16 @@ public class PantallaPartida implements Screen, GameController {
     public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano){
         partida.actualizarEstado(mano, p1, p2, turno, jugadorMano, miRol);
         System.out.println("[CLIENTE] Estado actualizado recibido: mano=" + mano + ", p1=" + p1 + ", p2=" + p2 + ", turno=" + turno + ", jugadorMano=" + jugadorMano);
-    }
 
+
+    }
     public void onCartaRival(int valor, Palo palo){
         Carta cartaRival = new Carta(valor, palo);
 
         if (zonaJuegoRival != null) {
+
             com.badlogic.gdx.math.Rectangle limitesZona = zonaJuegoRival.getLimites();
+
 
             float xCarta = limitesZona.x + (limitesZona.width - CARTA_ANCHO) / 2f;
             float yCarta = limitesZona.y + (limitesZona.height - CARTA_ALTO) / 2f;
@@ -422,7 +448,6 @@ public class PantallaPartida implements Screen, GameController {
             System.out.println("[PANTALLA] Carta del rival agregada y dimensionada.");
         }
     }
-
     public void onTrucoRival(){
         this.mostrarMensajeTrucoRival = true;
         this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
@@ -431,9 +456,11 @@ public class PantallaPartida implements Screen, GameController {
     public void onCartaRecibida(int valor, Palo palo) {
         Carta carta = new Carta(valor, palo);
 
+        //  SIEMPRE agregar a jugadores.get(0) que es "yo"
         jugadores.get(0).agregarCarta(carta);
         System.out.println("[CLIENTE " + miRol + "] Carta agregada a MI mano: " + valor + " de " + palo);
 
+        // Verificar cuántas cartas tengo
         Carta[] miMano = jugadores.get(0).getMano();
 
         int cartasRecibidas = 0;
@@ -445,14 +472,19 @@ public class PantallaPartida implements Screen, GameController {
         }
 
         System.out.println("[CLIENTE] Cartas en mi mano: " + cartasRecibidas + "/3");
+
+        if (cartasRecibidas == 3) {
+            System.out.println("[CLIENTE] ¡Tengo 3 cartas! Listo para inicializar");
+            //  NO marcamos inicioRonda aquí, lo hacemos en startGame
+        }
     }
 
     public void onTrucoActualizado(boolean trucoUsado, int manoTruco) {
-        if (partida != null) {
-            partida.actualizarTruco(trucoUsado, manoTruco);
-            System.out.println("[PANTALLA] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
-        }
-    }
+     if (partida != null) {
+         partida.actualizarTruco(trucoUsado, manoTruco);
+         System.out.println("[PANTALLA] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
+         }
+     }
 
     public void onNuevaRonda() {
         System.out.println("[PANTALLA] Nueva ronda iniciada por el servidor");
@@ -470,26 +502,32 @@ public class PantallaPartida implements Screen, GameController {
         System.out.println("[PANTALLA] Manos limpiadas, esperando nuevas cartas del servidor");
     }
 
+    // Implementación del método de la interfaz
     @Override
     public void onJuegoTerminado(int idGanador) {
         System.out.println("[PANTALLA] Juego terminado. Ganador global ID: " + idGanador);
 
+        // Determinar quién es el ganador basado en mi ID local
         Jugador objetoGanador;
 
+        // Si el ID del ganador coincide con MI ID asignado (miID)
         if (idGanador == this.miID) {
-            objetoGanador = jugadores.get(0);
+            objetoGanador = jugadores.get(0); // Jugador 0 siempre soy "YO" en mi lista local
         } else {
-            objetoGanador = jugadores.get(1);
+            objetoGanador = jugadores.get(1); // Jugador 1 siempre es "RIVAL" en mi lista local
         }
 
+        // Activar la pantalla final
         pantallaFinal.activar(
                 objetoGanador,
-                jugadores.get(0),
-                jugadores.get(1)
+                jugadores.get(0), // Yo
+                jugadores.get(1)  // Rival
         );
 
+        // Desactivar controles de juego
         Gdx.input.setInputProcessor(null);
     }
+
 
     public void onVolverAlMenu() {
         System.out.println("El rival se desconectó");
@@ -513,13 +551,15 @@ public class PantallaPartida implements Screen, GameController {
 
     @Override
     public void dispose() {
+        if (fontBotonTruco != null) fontBotonTruco.dispose();
         if (fondoPartida != null) fondoPartida.dispose();
         if (mazoSprite != null) mazoSprite.dispose();
         if (batch != null) batch.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
-        if (hud != null) hud.dispose();
+        if (hud != null) hud.dispose(); // ← AGREGAR ESTA LÍNEA
         if (hc != null) {
             hc.detener();
         }
+
     }
 }

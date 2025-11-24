@@ -1,91 +1,88 @@
 package juego.pantallas;
 
 import juego.Principal;
+import juego.utilidades.GestorSonido;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import juego.utilidades.GestorFuentes;
-
 
 import java.util.Random;
 
 public class PantallaMenu implements Screen {
 
     private final Principal game;
-
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
 
     private Texture backgroundTexture;
     private Texture optionsBackgroundTexture;
-
     private boolean inOptionsMode = false;
 
-
+    // Efectos CRT
     private boolean crtEnabled = true;
     private boolean flickerEnabled = true;
     private boolean shakeEnabled = true;
-
     private float scanlineOffset = 0f;
     private float crtFlicker = 0f;
 
     private Random random = new Random();
-
     private static final float VIRTUAL_WIDTH = 1280;
     private static final float VIRTUAL_HEIGHT = 720;
     private Viewport viewport;
 
-
+    // Botones principales
     private Rectangle btnPlayRect = new Rectangle();
     private Rectangle btnOptionsRect = new Rectangle();
     private Rectangle btnExitRect = new Rectangle();
+
+    // Botones de opciones
     private Rectangle btnCloseOptionsRect = new Rectangle();
     private Rectangle chkCRTBox = new Rectangle();
     private Rectangle chkFlickerBox = new Rectangle();
     private Rectangle chkShakeBox = new Rectangle();
+    private Rectangle chkMusicBox = new Rectangle();
 
+    // ✅ NUEVO: Barra de volumen
+    private Rectangle sliderBarRect = new Rectangle();
+    private Rectangle sliderKnobRect = new Rectangle();
+    private boolean draggingVolume = false;
 
     private Texture btnPlayTexture, btnOptionsTexture, btnExitTexture, btnCloseOptionsTexture;
     private Texture chkCheckedTexture, chkUncheckedTexture;
     private Texture titleTexture;
+    private Texture whitePixel;
 
-
-    private Music[] canciones;
-    private String[] rutasCanciones = {
-        "sounds/fuego.mp3"
-
-    };
+    // ✅ NUEVO: Gestor de sonido
+    private GestorSonido gestorSonido;
 
     public PantallaMenu(final Principal game) {
         this.game = game;
-
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
-
-
         viewport = new FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
+        // ✅ Inicializar gestor de sonido
+        gestorSonido = GestorSonido.getInstancia();
 
         loadFont();
         loadBackgrounds();
         loadButtonTextures();
         setButtonRects();
-        cargarMusicaFondo();
+        cargarSonidos();
     }
 
     private void loadFont() {
         try {
             GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
-            font = gestorFuentes.getMenuTitle();  // Fuente de 36px para menú
+            font = gestorFuentes.getMenuTitle();
             Gdx.app.log("PantallaMenu", "Fuente medieval.ttf cargada desde el gestor");
         } catch (Exception e) {
             font = new BitmapFont();
@@ -94,13 +91,14 @@ public class PantallaMenu implements Screen {
     }
 
     private void loadBackgrounds() {
-         if (Gdx.files.internal("fondos/fondo.png").exists()) {
+        if (Gdx.files.internal("fondos/fondo.png").exists()) {
             backgroundTexture = new Texture(Gdx.files.internal("fondos/fondo.png"));
             Gdx.app.log("PantallaMenu", "Fondo principal cargado correctamente");
         } else {
             backgroundTexture = null;
             Gdx.app.error("PantallaMenu", "No se encontró fondos/fondo.png, usando fondo procedural");
         }
+
         if (Gdx.files.internal("fondos/fondoOpciones.png").exists()) {
             optionsBackgroundTexture = new Texture(Gdx.files.internal("fondos/fondoOpciones.png"));
             Gdx.app.log("PantallaMenu", "Fondo de opciones cargado correctamente");
@@ -111,23 +109,7 @@ public class PantallaMenu implements Screen {
     }
 
     private void loadButtonTextures() {
-     /*
-        btnPlayTexture = tryLoadTexture("sprites/btn_jugar.png");
-        btnOptionsTexture = tryLoadTexture("sprites/btn_jugar.png");
-        btnExitTexture = tryLoadTexture("sprites/btn_jugar.png");
-        btnCloseOptionsTexture = tryLoadTexture("sprites/btn_jugar.png");
-        chkCheckedTexture = tryLoadTexture("sprites/btn_jugar.png");
-        chkUncheckedTexture = tryLoadTexture("sprites/pepi.png");
-        titleTexture = tryLoadTexture("sprites/btn_jugar.png");
-    */}
-
-    private Texture tryLoadTexture(String path) {
-        if (Gdx.files.internal(path).exists()) {
-            return new Texture(Gdx.files.internal(path));
-        } else {
-            Gdx.app.error("PantallaMenu", "No se encontró: " + path);
-            return null;
-        }
+        // Texturas opcionales para botones
     }
 
     private void setButtonRects() {
@@ -143,17 +125,38 @@ public class PantallaMenu implements Screen {
         btnOptionsRect.set(centerX, startY + (btnH + espacio), btnW, btnH);
         btnExitRect.set(centerX, startY, btnW, btnH);
 
+        // Botón cerrar opciones
+        btnCloseOptionsRect.set(centerX - 64, -startY + 2 * (btnH + espacio), btnW, btnH);
 
-        btnCloseOptionsRect.set(centerX-64, -startY + 2 * (btnH + espacio), btnW, btnH);
-        //checkbox
+        // Checkboxes en opciones
         float chkW = 56, chkH = 56;
         float chkEspacio = 48;
-        float chkTotalH = 3 * chkH + 2 * chkEspacio;
-        float chkStartY = chkTotalH - 160;
         float chkX = w / 2.5f - chkW / 2f;
-        chkCRTBox.set(chkX, chkStartY + 2 * (chkH + chkEspacio), chkW, chkH);
-        chkFlickerBox.set(chkX, chkStartY + (chkH + chkEspacio), chkW, chkH);
-        chkShakeBox.set(chkX, chkStartY, chkW, chkH);
+        float chkStartY = h / 2f + 80;
+
+        chkCRTBox.set(chkX, chkStartY, chkW, chkH);
+        chkFlickerBox.set(chkX, chkStartY - (chkH + chkEspacio), chkW, chkH);
+        chkShakeBox.set(chkX, chkStartY - 2 * (chkH + chkEspacio), chkW, chkH);
+        chkMusicBox.set(chkX, chkStartY - 3 * (chkH + chkEspacio), chkW, chkH);
+
+        // ✅ NUEVO: Barra de volumen
+        float sliderW = 300;
+        float sliderH = 20;
+        float sliderX = w / 2.5f - sliderW / 2f;
+        float sliderY = chkStartY - 4 * (chkH + chkEspacio) - 20;
+        sliderBarRect.set(sliderX, sliderY, sliderW, sliderH);
+
+        // Knob del slider
+        float knobSize = 30;
+        float knobX = sliderX + (sliderW * gestorSonido.getVolumenMusica()) - knobSize / 2f;
+        sliderKnobRect.set(knobX, sliderY - 5, knobSize, knobSize);
+    }
+
+    private void cargarSonidos() {
+
+        gestorSonido.cargarMusica("menu","sounds/musicaF.wav");
+        gestorSonido.cargarSonido("click","sounds/click.wav");
+        gestorSonido.reproducirMusica("menu");
     }
 
     @Override
@@ -164,7 +167,6 @@ public class PantallaMenu implements Screen {
 
     @Override
     public void render(float delta) {
-
         if (crtEnabled) {
             scanlineOffset += 60 * delta * 0.5f;
             if (scanlineOffset > 4) scanlineOffset = 0;
@@ -184,8 +186,8 @@ public class PantallaMenu implements Screen {
 
         batch.begin();
 
-
-          if (!inOptionsMode) {
+        // Dibujar fondo
+        if (!inOptionsMode) {
             if (backgroundTexture != null) {
                 batch.draw(backgroundTexture, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             } else {
@@ -199,8 +201,8 @@ public class PantallaMenu implements Screen {
             }
         }
 
-
-       if (titleTexture != null) {
+        // Dibujar título
+        if (titleTexture != null) {
             batch.draw(titleTexture, VIRTUAL_WIDTH/2f - titleTexture.getWidth()/2f, VIRTUAL_HEIGHT - 120);
         } else if (font != null) {
             font.setColor(Color.valueOf("F0C850"));
@@ -208,32 +210,46 @@ public class PantallaMenu implements Screen {
             font.draw(batch, "Envit", VIRTUAL_WIDTH/2f - 170, VIRTUAL_HEIGHT - 220);
         }
 
-
+        // Dibujar botones
         if (!inOptionsMode) {
             drawButton(batch, btnPlayTexture, btnPlayRect, "JUGAR");
             drawButton(batch, btnOptionsTexture, btnOptionsRect, "OPCIONES");
             drawButton(batch, btnExitTexture, btnExitRect, "SALIR");
         } else {
             drawButton(batch, btnCloseOptionsTexture, btnCloseOptionsRect, "CERRAR");
+
             // Checkboxes
             drawCheckbox(batch, chkCRTBox, crtEnabled, "Efectos CRT");
             drawCheckbox(batch, chkFlickerBox, flickerEnabled, "Destellos");
             drawCheckbox(batch, chkShakeBox, shakeEnabled, "Temblor");
+            drawCheckbox(batch, chkMusicBox, gestorSonido.isMusicaHabilitada(), "Música");
+
+            // ✅ Etiqueta de volumen
+            font.setColor(Color.WHITE);
+            font.getData().setScale(1.0f);
+            font.draw(batch, "Volumen", sliderBarRect.x, sliderBarRect.y + 60);
         }
+
         batch.end();
 
-         if (crtEnabled) {
+        // ✅ Dibujar barra de volumen (con ShapeRenderer)
+        if (inOptionsMode) {
+            drawVolumeSlider();
+        }
+
+        // Efectos CRT
+        if (crtEnabled) {
             drawCRTEffect();
         }
 
-          handleInput();
+        handleInput();
     }
 
     private void drawButton(SpriteBatch batch, Texture texture, Rectangle rect, String texto) {
-         com.badlogic.gdx.math.Vector2 mouse = viewport.unproject(new com.badlogic.gdx.math.Vector2(Gdx.input.getX(), Gdx.input.getY()));
+        Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
         boolean hovered = rect.contains(mouse.x, mouse.y);
 
-          if (texture != null) {
+        if (texture != null) {
             batch.setColor(hovered ? new Color(15, 55, 175, 1) : Color.WHITE);
             batch.draw(texture, rect.x, rect.y, rect.width, rect.height);
             batch.setColor(Color.GOLDENROD);
@@ -243,7 +259,7 @@ public class PantallaMenu implements Screen {
             batch.setColor(Color.WHITE);
         }
 
-         if (font != null) {
+        if (font != null) {
             font.setColor(hovered ? Color.valueOf("F0C850") : Color.WHITE);
             font.getData().setScale(1.2f);
 
@@ -256,46 +272,142 @@ public class PantallaMenu implements Screen {
         }
     }
 
-
     private void drawCheckbox(SpriteBatch batch, Rectangle rect, boolean checked, String label) {
-        com.badlogic.gdx.math.Vector2 mouse = viewport.unproject(new com.badlogic.gdx.math.Vector2(Gdx.input.getX(), Gdx.input.getY()));
+        Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
         boolean hovered = rect.contains(mouse.x, mouse.y);
+
         Texture tex = checked ? chkCheckedTexture : chkUncheckedTexture;
         if (tex != null) {
             batch.setColor(hovered ? new Color(0.7f, 1f, 1f, 1f) : Color.WHITE);
             batch.draw(tex, rect.x, rect.y, rect.width, rect.height);
             batch.setColor(Color.WHITE);
         } else {
-            batch.setColor(hovered ? new Color(0,1,1,0.25f) : new Color(0,0,0,0.25f));
+            batch.setColor(hovered ? new Color(0.3f, 0.5f, 0.8f, 0.8f) : new Color(0.2f, 0.2f, 0.4f, 0.8f));
             batch.draw(getWhitePixel(), rect.x, rect.y, rect.width, rect.height);
             batch.setColor(Color.WHITE);
+
+            if (checked) {
+                batch.setColor(Color.valueOf("F0C850"));
+                float margin = 10;
+                batch.draw(getWhitePixel(), rect.x + margin, rect.y + margin,
+                        rect.width - margin * 2, rect.height - margin * 2);
+                batch.setColor(Color.WHITE);
+            }
         }
+
         if (font != null) {
             font.setColor(hovered ? Color.valueOf("F0C850") : Color.WHITE);
             font.getData().setScale(1f);
-            // texto checkbox
             float labelX = rect.x + rect.width + 16;
-            float labelY = rect.y + rect.height - 16;
+            float labelY = rect.y + rect.height - 12;
             font.draw(batch, label, labelX, labelY);
         }
     }
 
+    // ✅ NUEVO: Dibuja la barra de volumen con shader
+    private void drawVolumeSlider() {
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Barra de fondo
+        shapeRenderer.setColor(0.2f, 0.2f, 0.4f, 0.8f);
+        shapeRenderer.rect(sliderBarRect.x, sliderBarRect.y, sliderBarRect.width, sliderBarRect.height);
+
+        // Barra de progreso (dorada)
+        float progressWidth = sliderBarRect.width * gestorSonido.getVolumenMusica();
+        shapeRenderer.setColor(Color.valueOf("F0C850"));
+        shapeRenderer.rect(sliderBarRect.x, sliderBarRect.y, progressWidth, sliderBarRect.height);
+
+        // Knob (círculo)
+        Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+        boolean hovered = sliderKnobRect.contains(mouse.x, mouse.y) || draggingVolume;
+
+        shapeRenderer.setColor(hovered ? Color.WHITE : Color.LIGHT_GRAY);
+        shapeRenderer.circle(
+                sliderKnobRect.x + sliderKnobRect.width / 2f,
+                sliderKnobRect.y + sliderKnobRect.height / 2f,
+                sliderKnobRect.width / 2f
+        );
+
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // Texto del porcentaje
+        batch.begin();
+        String volText = (int)(gestorSonido.getVolumenMusica() * 100) + "%";
+        font.setColor(Color.WHITE);
+        font.getData().setScale(1.0f);
+        font.draw(batch, volText,
+                sliderBarRect.x + sliderBarRect.width + 20,
+                sliderBarRect.y + sliderBarRect.height
+        );
+        batch.end();
+    }
+
     private void handleInput() {
-        if (Gdx.input.justTouched()) {
+        Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+        float x = touch.x;
+        float y = touch.y;
 
-            com.badlogic.gdx.math.Vector2 touch = viewport.unproject(new com.badlogic.gdx.math.Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            float x = touch.x;
-            float y = touch.y;
+        // ✅ NUEVO: Manejar arrastre del slider de volumen
+        if (inOptionsMode) {
+            if (Gdx.input.isTouched()) {
+                if (draggingVolume || sliderBarRect.contains(x, y) || sliderKnobRect.contains(x, y)) {
+                    draggingVolume = true;
 
-            if (!inOptionsMode) {
-                if (btnPlayRect.contains(x, y)) startGame();
-                else if (btnOptionsRect.contains(x, y)) toggleOptions();
-                else if (btnExitRect.contains(x, y)) Gdx.app.exit();
+                    // Calcular nuevo volumen
+                    float newVolume = (x - sliderBarRect.x) / sliderBarRect.width;
+                    newVolume = Math.max(0f, Math.min(1f, newVolume));
+                    gestorSonido.setVolumenMusica(newVolume);
+
+                    // Actualizar posición del knob
+                    float knobX = sliderBarRect.x + (sliderBarRect.width * newVolume) - sliderKnobRect.width / 2f;
+                    sliderKnobRect.x = knobX;
+                }
             } else {
-                if (btnCloseOptionsRect.contains(x, y)) toggleOptions();
-                else if (chkCRTBox.contains(x, y)) crtEnabled = !crtEnabled;
-                else if (chkFlickerBox.contains(x, y)) flickerEnabled = !flickerEnabled;
-                else if (chkShakeBox.contains(x, y)) shakeEnabled = !shakeEnabled;
+                draggingVolume = false;
+            }
+        }
+
+        // Clicks en botones
+        if (Gdx.input.justTouched()) {
+            if (!inOptionsMode) {
+                if (btnPlayRect.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    startGame();
+                }
+                else if (btnOptionsRect.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    toggleOptions();
+                }
+                else if (btnExitRect.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    Gdx.app.exit();
+                }
+            } else {
+                if (btnCloseOptionsRect.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    toggleOptions();
+                }
+                else if (chkCRTBox.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    crtEnabled = !crtEnabled;
+                }
+                else if (chkFlickerBox.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    flickerEnabled = !flickerEnabled;
+                }
+                else if (chkShakeBox.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    shakeEnabled = !shakeEnabled;
+                }
+                else if (chkMusicBox.contains(x, y)) {
+                    gestorSonido.reproducirSonido("click");
+                    boolean nuevoEstado = !gestorSonido.isMusicaHabilitada();
+                    gestorSonido.setMusicaHabilitada(nuevoEstado);
+                }
             }
         }
     }
@@ -305,72 +417,35 @@ public class PantallaMenu implements Screen {
     }
 
     private void startGame() {
-        // Cambia a la pantalla de partida
+        gestorSonido.detenerMusica();
         game.setScreen(new PantallaPartida(game));
     }
 
-    private void cargarMusicaFondo() {
-        canciones = new Music[rutasCanciones.length];
-        for (int i = 0; i < rutasCanciones.length; i++) {
-            if (Gdx.files.internal(rutasCanciones[i]).exists()) {
-                canciones[i] = Gdx.audio.newMusic(Gdx.files.internal(rutasCanciones[i]));
-                canciones[i].setLooping(true);
-                canciones[i].setVolume(0.5f);
-                canciones[i].play();
-            }
-        }
-    }
-
     private void drawProceduralBackground(SpriteBatch batch) {
-
         batch.end();
-
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        int w = Gdx.graphics.getWidth();
-        int h = Gdx.graphics.getHeight();
-
-
-        shapeRenderer.rect(0, 0, w, h, new Color(0.04f, 0.04f, 0.12f,1), new Color(0.16f, 0.04f, 0.24f,1), new Color(0.24f, 0.08f, 0.39f,1), new Color(0.04f, 0.16f, 0.39f,1));
-
-
-        for (int i = 0; i < 15; i++) {
-            float x = random.nextInt(w);
-            float y = random.nextInt(h);
-            float size = random.nextInt(150) + 50;
-            shapeRenderer.setColor(0, 1, 1, 0.12f);
-            shapeRenderer.circle(x, y, size);
-        }
-
-
-        shapeRenderer.setColor(1, 0, 1, 0.16f);
-        for (int i = 0; i < 20; i++) {
-            float x1 = random.nextInt(w);
-            float y1 = random.nextInt(h);
-            float x2 = x1 + random.nextInt(200) - 100;
-            float y2 = y1 + random.nextInt(200) - 100;
-            shapeRenderer.rectLine(x1, y1, x2, y2, 2);
-        }
-
+        int w = (int)VIRTUAL_WIDTH;
+        int h = (int)VIRTUAL_HEIGHT;
+        shapeRenderer.rect(0, 0, w, h,
+                new Color(0.04f, 0.04f, 0.12f,1),
+                new Color(0.16f, 0.04f, 0.24f,1),
+                new Color(0.24f, 0.08f, 0.39f,1),
+                new Color(0.04f, 0.16f, 0.39f,1));
         shapeRenderer.end();
-
         batch.begin();
     }
 
     private void drawProceduralOptionsBackground(SpriteBatch batch) {
         batch.end();
-
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        int w = Gdx.graphics.getWidth();
-        int h = Gdx.graphics.getHeight();
-
-
-
-        shapeRenderer.rect(0, 0, w / 2, h / 2, new Color(0.04f, 0.04f, 0.12f,1), new Color(0.16f, 0.04f, 0.24f,1), new Color(0.24f, 0.08f, 0.39f,1), new Color(0.04f, 0.16f, 0.39f,1));
-
-        shapeRenderer.rect(w / 2, 0, w / 2, h, new Color(0.24f, 0.08f, 0.39f, 0.39f), new Color(0.08f, 0.16f, 0.39f, 0.39f), new Color(0.08f, 0.16f, 0.39f, 0.39f), new Color(0.24f, 0.08f, 0.39f, 0.39f));
-
+        int w = (int)VIRTUAL_WIDTH;
+        int h = (int)VIRTUAL_HEIGHT;
+        shapeRenderer.rect(0, 0, w, h,
+                new Color(0.04f, 0.04f, 0.12f,1),
+                new Color(0.16f, 0.04f, 0.24f,1),
+                new Color(0.24f, 0.08f, 0.39f,1),
+                new Color(0.04f, 0.16f, 0.39f,1));
         shapeRenderer.end();
-
         batch.begin();
     }
 
@@ -382,12 +457,10 @@ public class PantallaMenu implements Screen {
         int w = (int)VIRTUAL_WIDTH;
         int h = (int)VIRTUAL_HEIGHT;
 
-
         shapeRenderer.setColor(0, 0, 0, 0.13f);
         for (int y = (int) scanlineOffset; y < h; y += 3) {
             shapeRenderer.rect(0, y, w, 1);
         }
-
 
         if (random.nextInt(60) < 2) {
             shapeRenderer.setColor(0, 0, 0, 0.06f);
@@ -398,7 +471,6 @@ public class PantallaMenu implements Screen {
 
         shapeRenderer.end();
 
-
         if (flickerEnabled && random.nextInt(100) < 8) {
             batch.begin();
             Color flickerColor = new Color(1,1,1, 0.04f + 0.07f * (float)Math.sin(crtFlicker));
@@ -407,7 +479,6 @@ public class PantallaMenu implements Screen {
             batch.setColor(Color.WHITE);
             batch.end();
         }
-
 
         if (random.nextInt(150) < 2) {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -421,7 +492,6 @@ public class PantallaMenu implements Screen {
             shapeRenderer.end();
         }
 
-
         if (shakeEnabled && random.nextInt(300) < 2) {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
             int distortY = random.nextInt(h);
@@ -430,9 +500,6 @@ public class PantallaMenu implements Screen {
             shapeRenderer.end();
         }
     }
-
-
-    private Texture whitePixel;
 
     private Texture getWhitePixel() {
         if (whitePixel == null) {
@@ -444,15 +511,23 @@ public class PantallaMenu implements Screen {
         }
         return whitePixel;
     }
+
     @Override
     public void pause() {}
+
     @Override
     public void resume() {}
+
     @Override
-    public void hide() {}
+    public void hide() {
+        gestorSonido.pausarMusica();
+    }
+
     @Override
-    public void show() {}
-    
+    public void show() {
+        gestorSonido.reproducirMusica("menu");
+    }
+
     @Override
     public void dispose() {
         batch.dispose();
@@ -460,7 +535,6 @@ public class PantallaMenu implements Screen {
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (optionsBackgroundTexture != null) optionsBackgroundTexture.dispose();
         if (whitePixel != null) whitePixel.dispose();
-        if (font != null) font.dispose();
         if (btnPlayTexture != null) btnPlayTexture.dispose();
         if (btnOptionsTexture != null) btnOptionsTexture.dispose();
         if (btnExitTexture != null) btnExitTexture.dispose();
@@ -468,14 +542,5 @@ public class PantallaMenu implements Screen {
         if (chkCheckedTexture != null) chkCheckedTexture.dispose();
         if (chkUncheckedTexture != null) chkUncheckedTexture.dispose();
         if (titleTexture != null) titleTexture.dispose();
-        // Detener y liberar música
-        if (canciones != null) {
-            for (Music musica : canciones) {
-                if (musica != null) {
-                    musica.stop();
-                    musica.dispose();
-                }
-            }
-        }
     }
 }

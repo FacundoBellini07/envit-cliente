@@ -12,13 +12,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import juego.pantallas.Partida;
 import juego.red.HiloCliente;
+import juego.utilidades.GestorSonido;
 
 /**
- * Botón visual para cantar Truco en el juego.
- * ✅ CORREGIDO: Solo disponible si:
- * 1. Es el primer turno en la mana (nadie jugó carta).
- * 2. El jugador local es el "Mano" (el que empieza a tirar).
- * 3. El Truco no ha sido cantado aún en la ronda.
+ Botón visual para cantar Truco en el juego.
+ 1. Es el primer turno en la mana (nadie jugó carta).
+ 2. El jugador local es el "Mano" (el que empieza a tirar).
+ 3. El Truco no ha sido cantado aún en la ronda.
  */
 public class BotonTruco {
 
@@ -44,6 +44,9 @@ public class BotonTruco {
 
     private HiloCliente hc;
 
+    // Gestor de sonido
+    private GestorSonido gestorSonido;
+
     public BotonTruco(float x, float y, float ancho, float alto,
                       BitmapFont font, Viewport viewport, Partida partida, HiloCliente hc) {
         this.btnAncho = ancho;
@@ -55,6 +58,9 @@ public class BotonTruco {
         this.btnRect = new Rectangle(x, y, ancho, alto);
         this.animacionPulso = 0f;
         this.hc = hc;
+
+        // Inicializar gestor de sonido
+        this.gestorSonido = GestorSonido.getInstancia();
     }
 
     public void update(float delta) {
@@ -100,7 +106,7 @@ public class BotonTruco {
         boolean trucoDisponible = isTrucoDisponible();
 
         Color colorBtn;
-        float escala = 1.0f;
+        float escala = 1.5f;
 
         if (!trucoDisponible) {
             colorBtn = colorDeshabilitado;
@@ -208,7 +214,10 @@ public class BotonTruco {
             return false;
         }
 
-        // ✅ NO marcar localmente, solo enviar al servidor
+        // : Reproducir sonido de truco
+        gestorSonido.reproducirSonido("truco");
+
+        // NO marcar localmente, solo enviar al servidor
         System.out.println("[CLIENTE] Enviando TRUCO al servidor...");
         hc.enviarMensaje("TRUCO");
 
