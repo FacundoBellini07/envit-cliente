@@ -62,13 +62,10 @@ public class Hud {
     public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador,
                        boolean trucoActivo, int manoTruco) {
         batch.begin();
-        if(miRol == TipoJugador.JUGADOR_1) {
-            dibujarPuntosJugador(batch, jugador1.getPuntos());
-            dibujarPuntosRival(batch, jugador2.getPuntos());
-        } else {
-            dibujarPuntosJugador(batch, jugador2.getPuntos());
-            dibujarPuntosRival(batch, jugador1.getPuntos());
-        }
+
+        dibujarPuntosJugador(batch, jugador1.getPuntos());
+        dibujarPuntosRival(batch, jugador2.getPuntos());
+
         dibujarInfoMano(batch, manoActual);
         dibujarIndicadorTurno(batch, esTurnoJugador);
 

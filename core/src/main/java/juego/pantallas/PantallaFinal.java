@@ -180,11 +180,8 @@ public class PantallaFinal {
         String puntuacion;
         fontTexto.setColor(Color.WHITE);
 
-        if(miRol == TipoJugador.JUGADOR_1) {
             puntuacion = "TU: " + jugador1.getPuntos() + " - RIVAL: " + jugador2.getPuntos();
-        } else {
-            puntuacion = "TU: " + jugador2.getPuntos() + " - RIVAL: " + jugador1.getPuntos();
-        }
+
 
         GlyphLayout layout = new GlyphLayout(fontTexto, puntuacion);
 

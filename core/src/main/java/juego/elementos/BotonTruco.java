@@ -106,7 +106,7 @@ public class BotonTruco {
         boolean trucoDisponible = isTrucoDisponible();
 
         Color colorBtn;
-        float escala = 1.5f;
+        float escala = 1.3f;
 
         if (!trucoDisponible) {
             colorBtn = colorDeshabilitado;
@@ -157,7 +157,7 @@ public class BotonTruco {
         batch.begin();
 
         font.setColor(trucoDisponible ? colorTexto : colorTextoDeshabilitado);
-        font.getData().setScale(1.8f);
+        font.getData().setScale(1.0f);
 
         String textoTruco = "TRUCO";
         GlyphLayout layout = new GlyphLayout(font, textoTruco);
@@ -169,7 +169,7 @@ public class BotonTruco {
 
         // Indicador de valor de Truco activo
         if (partida.isTrucoActivoEnManoActual()) {
-            font.getData().setScale(0.8f);
+            font.getData().setScale(0.6f);
             font.setColor(colorIndicador);
             String textoActivo = "x2";
             layout = new GlyphLayout(font, textoActivo);

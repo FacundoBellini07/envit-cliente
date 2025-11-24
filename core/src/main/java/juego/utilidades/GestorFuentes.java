@@ -15,15 +15,13 @@ public class GestorFuentes {
     private static GestorFuentes instancia;
     private HashMap<String, BitmapFont> fuentes;
     private final String RUTA_FUENTE = "fuentes/medieval.ttf";
+    private boolean fuentesDisponibles = false; // ✅ AGREGAR
 
     private GestorFuentes() {
         fuentes = new HashMap<>();
         cargarTodasLasFuentes();
     }
 
-    /**
-     * Obtiene la instancia única del gestor de fuentes
-     */
     public static GestorFuentes getInstancia() {
         if (instancia == null) {
             instancia = new GestorFuentes();
@@ -31,9 +29,6 @@ public class GestorFuentes {
         return instancia;
     }
 
-    /**
-     * Carga todas las fuentes que necesita el juego
-     */
     private void cargarTodasLasFuentes() {
         try {
             FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
@@ -46,6 +41,8 @@ public class GestorFuentes {
             paramGrande.size = 48;
             paramGrande.borderWidth = 2;
             paramGrande.borderColor = Color.BLACK;
+            paramGrande.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramGrande.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("grande", generator.generateFont(paramGrande));
 
             // Fuente MEDIANA para información del juego (32px)
@@ -54,12 +51,16 @@ public class GestorFuentes {
             paramMediana.size = 32;
             paramMediana.borderWidth = 1;
             paramMediana.borderColor = Color.BLACK;
+            paramMediana.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramMediana.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("mediana", generator.generateFont(paramMediana));
 
             // Fuente PEQUEÑA para detalles (24px)
             FreeTypeFontGenerator.FreeTypeFontParameter paramPequeña =
                     new FreeTypeFontGenerator.FreeTypeFontParameter();
             paramPequeña.size = 24;
+            paramPequeña.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramPequeña.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("pequeña", generator.generateFont(paramPequeña));
 
             // Fuente para botón Truco (28px)
@@ -68,24 +69,31 @@ public class GestorFuentes {
             paramBoton28.size = 28;
             paramBoton28.borderWidth = 1;
             paramBoton28.borderColor = Color.BLACK;
+            paramBoton28.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramBoton28.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("boton28", generator.generateFont(paramBoton28));
 
-            // Fuente para botón Truco (20px)
+            // Fuente para botón Truco (20px) - ✅ AUMENTAR TAMAÑO A 24px
             FreeTypeFontGenerator.FreeTypeFontParameter paramBoton20 =
                     new FreeTypeFontGenerator.FreeTypeFontParameter();
-            paramBoton20.size = 20;
+            paramBoton20.size = 24; // CAMBIAR de 20 a 24
             paramBoton20.borderWidth = 1;
             paramBoton20.borderColor = Color.BLACK;
+            paramBoton20.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramBoton20.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("boton20", generator.generateFont(paramBoton20));
 
             // Fuente extra grande para menú (36px)
             FreeTypeFontGenerator.FreeTypeFontParameter paramMenuTitle =
                     new FreeTypeFontGenerator.FreeTypeFontParameter();
             paramMenuTitle.size = 36;
+            paramMenuTitle.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramMenuTitle.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
             fuentes.put("menuTitle", generator.generateFont(paramMenuTitle));
 
             generator.dispose();
 
+            fuentesDisponibles = true; // ✅ MARCAR como disponibles
             System.out.println("[FUENTES] ✅ Todas las fuentes medieval.ttf cargadas correctamente");
 
         } catch (Exception e) {
@@ -95,9 +103,6 @@ public class GestorFuentes {
         }
     }
 
-    /**
-     * Crea fuentes por defecto si fallan las de medieval.ttf
-     */
     private void crearFuentesPorDefecto() {
         System.out.println("[FUENTES] Creando fuentes por defecto...");
         fuentes.put("grande", new BitmapFont());
@@ -108,65 +113,44 @@ public class GestorFuentes {
         fuentes.put("menuTitle", new BitmapFont());
     }
 
-    /**
-     * Obtiene una fuente por nombre
-     * @param nombre Nombre de la fuente (grande, mediana, pequeña, boton28, boton20, menuTitle)
-     * @return BitmapFont o fuente por defecto si no existe
-     */
     public BitmapFont obtener(String nombre) {
         BitmapFont font = fuentes.get(nombre);
         if (font == null) {
-            System.err.println("[FUENTES] ⚠️ Fuente '" + nombre + "' no encontrada, devolviendo por defecto");
+            System.err.println("[FUENTES] ⚠️ Fuente '" + nombre + "' no encontrada");
             return new BitmapFont();
         }
         return font;
     }
 
-    /**
-     * Obtiene la fuente grande
-     */
+    // ✅ NUEVO: Verificar si las fuentes están disponibles
+    public boolean estaDisponible() {
+        return fuentesDisponibles;
+    }
+
     public BitmapFont getGrande() {
         return obtener("grande");
     }
 
-    /**
-     * Obtiene la fuente mediana
-     */
     public BitmapFont getMediana() {
         return obtener("mediana");
     }
 
-    /**
-     * Obtiene la fuente pequeña
-     */
     public BitmapFont getPequeña() {
         return obtener("pequeña");
     }
 
-    /**
-     * Obtiene la fuente para botón (28px)
-     */
     public BitmapFont getBoton28() {
         return obtener("boton28");
     }
 
-    /**
-     * Obtiene la fuente para botón (20px)
-     */
     public BitmapFont getBoton20() {
         return obtener("boton20");
     }
 
-    /**
-     * Obtiene la fuente para títulos de menú
-     */
     public BitmapFont getMenuTitle() {
         return obtener("menuTitle");
     }
 
-    /**
-     * Libera todas las fuentes
-     */
     public void dispose() {
         for (BitmapFont font : fuentes.values()) {
             if (font != null) {
@@ -174,12 +158,10 @@ public class GestorFuentes {
             }
         }
         fuentes.clear();
+        fuentesDisponibles = false; // ✅ MARCAR como no disponibles
         System.out.println("[FUENTES] Recursos liberados");
     }
 
-    /**
-     * Reinicia el gestor (útil para tests)
-     */
     public static void reiniciar() {
         if (instancia != null) {
             instancia.dispose();
@@ -187,3 +169,6 @@ public class GestorFuentes {
         instancia = null;
     }
 }
+
+
+

@@ -2,6 +2,7 @@ package juego.pantallas;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.Game;
@@ -226,17 +227,27 @@ public class PantallaPartida implements Screen, GameController {
                 Gdx.gl.glClearColor(0, 0, 0, 1);
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+                viewport.apply(); // ✅ AGREGAR ESTO
                 batch.setProjectionMatrix(viewport.getCamera().combined);
                 batch.begin();
 
-                font.getData().setScale(2.0f);
+                font.getData().setScale(1.5f); // ✅ REDUCIR de 2.0f a 1.5f
                 font.setColor(Color.RED);
-                // Ajusta las coordenadas X,Y según necesites para centrarlo
-                font.draw(batch, "¡RIVAL DESCONECTADO!", WORLD_WIDTH / 2f - 180, WORLD_HEIGHT / 2f + 50);
 
-                font.getData().setScale(1.2f);
+                // ✅ CENTRAR CORRECTAMENTE el texto
+                String msg = "¡RIVAL DESCONECTADO!";
+                GlyphLayout layout = new GlyphLayout(font, msg);
+                float textX = (WORLD_WIDTH - layout.width) / 2f;
+                float textY = (WORLD_HEIGHT + layout.height) / 2f + 50;
+                font.draw(batch, msg, textX, textY);
+
+                font.getData().setScale(1.0f); // ✅ REDUCIR de 1.2f a 1.0f
                 font.setColor(Color.WHITE);
-                font.draw(batch, "Toca la pantalla para volver al menú", WORLD_WIDTH / 2f - 160, WORLD_HEIGHT / 2f - 50);
+                String msg2 = "Toca la pantalla para volver al menú";
+                layout = new GlyphLayout(font, msg2);
+                textX = (WORLD_WIDTH - layout.width) / 2f;
+                textY = (WORLD_HEIGHT - layout.height) / 2f - 50;
+                font.draw(batch, msg2, textX, textY);
 
                 batch.end();
 
@@ -553,15 +564,23 @@ public class PantallaPartida implements Screen, GameController {
 
     @Override
     public void dispose() {
-        if (fontBotonTruco != null) fontBotonTruco.dispose();
-        if (fondoPartida != null) fondoPartida.dispose();
-        if (mazoSprite != null) mazoSprite.dispose();
-        if (batch != null) batch.dispose();
-        if (shapeRenderer != null) shapeRenderer.dispose();
-        if (hud != null) hud.dispose(); // ← AGREGAR ESTA LÍNEA
-        if (hc != null) {
-            hc.detener();
+            if (fontBotonTruco != null) {
+                fontBotonTruco = null;
+            }
+            if (font != null) {
+                font = null;
+            }
+            if (fondoPartida != null) fondoPartida.dispose();
+            if (mazoSprite != null) mazoSprite.dispose();
+            if (dorsoCartaSprite != null) dorsoCartaSprite.dispose();
+            if (casilla != null) casilla.dispose();
+            if (batch != null) batch.dispose();
+            if (shapeRenderer != null) shapeRenderer.dispose();
+            if (hud != null) hud.dispose();
+            if (hc != null) {
+                hc.detener();
+            }
         }
 
     }
-}
+

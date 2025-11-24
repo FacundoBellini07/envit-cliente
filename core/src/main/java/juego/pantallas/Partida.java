@@ -178,9 +178,14 @@ public class Partida {
         this.estadoActual = nuevoTurno;
         this.jugadorMano = jugadorMano;
 
-        this.jugador1.setPuntos(p1);
-        this.jugador2.setPuntos(p2);
-
+      if(miRol == TipoJugador.JUGADOR_1) {
+          this.jugador1.setPuntos(p1);
+          this.jugador2.setPuntos(p2);
+      }
+      else{
+          this.jugador1.setPuntos(p2);
+          this.jugador2.setPuntos(p1);
+      }
 
         System.out.println("[PARTIDA CLIENTE] Estado forzado: mano=" + mano +
                 ", turno=" + nuevoTurno + ", jugadorMano=" + jugadorMano);
