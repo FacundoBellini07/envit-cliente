@@ -79,7 +79,8 @@ public class ManoManager {
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
         float Y_FINAL = WORLD_HEIGHT * 0.05f;
 
-        multiplexer.clear();
+        // ✅ SOLO limpiar la lista de CartaInput, NO el multiplexer
+        // multiplexer.clear(); // ❌ ELIMINAR ESTA LÍNEA
         cartaInputs.clear();
 
         System.out.println("[MANO_MANAGER] Inicializando " + numCartas + " cartas");
