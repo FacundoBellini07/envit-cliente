@@ -38,6 +38,10 @@ public class BotonTruco implements InputProcessor {
     private HiloCliente hc;
     private GestorSonido gestorSonido;
 
+    // ✅ NUEVO: Contador de clicks para debug
+    private int contadorClicks = 0;
+    private long ultimoClickTimestamp = 0;
+
     public BotonTruco(float x, float y, float ancho, float alto,
                       BitmapFont font, Viewport viewport, PartidaCliente partida, HiloCliente hc) {
         this.btnAncho = ancho;
@@ -51,6 +55,8 @@ public class BotonTruco implements InputProcessor {
         this.hc = hc;
 
         this.gestorSonido = GestorSonido.getInstancia();
+
+        System.out.println("[BOTON_TRUCO] ✅ Creado en posición (" + x + ", " + y + ") con tamaño " + ancho + "x" + alto);
     }
 
     public void update(float delta) {
@@ -59,29 +65,20 @@ public class BotonTruco implements InputProcessor {
             animacionPulso = 0f;
         }
 
-
         actualizarHover();
-
-        if ((int)(animacionPulso * 100) % 200 == 0) {
-            String ultimoCanto = "nadie";
-            if (partida.getEstadoTruco() != EstadoTruco.SIN_TRUCO) {
-                // Necesitamos obtener esta info de Partida
-                ultimoCanto = "verificar en partida";
-            }
-
-            System.out.println("[BOTON_TRUCO DEBUG] " +
-                    "EstadoTruco=" + partida.getEstadoTruco() +
-                    ", ManoActual=" + partida.getManoActual() +
-                    ", EsMiTurno=" + partida.esMiTurnoLocal() +
-                    ", SoyMano=" + partida.soyJugadorMano() +
-                    ", PrimerTurno=" + partida.esPrimerTurnoEnMano() +
-                    ", Disponible=" + isTrucoDisponible());
-        }
     }
 
     private boolean isTrucoDisponible() {
-        // ✅ NUEVO: Usar el método del partida que ya valida todo
-        return partida.puedoCantarTruco();
+        boolean disponible = partida.puedoCantarTruco();
+
+        // Log cada 2 segundos aprox
+        if ((int)(animacionPulso * 100) % 600 == 0) {
+            System.out.println("[BOTON_TRUCO] Disponible=" + disponible +
+                    " | Estado=" + partida.getEstadoTruco() +
+                    " | MiTurno=" + partida.esMiTurnoLocal());
+        }
+
+        return disponible;
     }
 
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
@@ -141,7 +138,6 @@ public class BotonTruco implements InputProcessor {
         font.setColor(trucoDisponible ? colorTexto : colorTextoDeshabilitado);
         font.getData().setScale(0.8f);
 
-        // ✅ NUEVO: Mostrar el canto correspondiente
         String textoBoton = partida.getSiguienteCanto();
         GlyphLayout layout = new GlyphLayout(font, textoBoton);
 
@@ -150,7 +146,6 @@ public class BotonTruco implements InputProcessor {
 
         font.draw(batch, textoBoton, textX, textY);
 
-        // ✅ NUEVO: Indicador del estado actual del truco
         if (partida.isTrucoActivoEnManoActual()) {
             font.getData().setScale(0.5f);
             font.setColor(colorIndicador);
@@ -174,29 +169,76 @@ public class BotonTruco implements InputProcessor {
         hovered = btnRect.contains(mouse.x, mouse.y) && trucoDisponible;
     }
 
+    @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Convertimos la coordenada del click (pantalla) a coordenadas del mundo
-        Vector2 touch = viewport.unproject(new Vector2(screenX, screenY));
+        contadorClicks++;
+        long ahora = System.currentTimeMillis();
+        long tiempoDesdeUltimoClick = ahora - ultimoClickTimestamp;
+        ultimoClickTimestamp = ahora;
 
-        if (btnRect.contains(touch.x, touch.y)) {
-            // Si tocamos el botón, intentamos cantar truco y devolvemos 'true' (evento consumido)
-            return intentarCantarTruco();
+        System.out.println("\n[BOTON_TRUCO] ========================================");
+        System.out.println("[BOTON_TRUCO] 🖱️ touchDown() LLAMADO");
+        System.out.println("[BOTON_TRUCO] Click #" + contadorClicks + " (Δt=" + tiempoDesdeUltimoClick + "ms)");
+        System.out.println("[BOTON_TRUCO] Screen coords: (" + screenX + ", " + screenY + ")");
+
+        Vector2 touch = viewport.unproject(new Vector2(screenX, screenY));
+        System.out.println("[BOTON_TRUCO] World coords: (" + touch.x + ", " + touch.y + ")");
+        System.out.println("[BOTON_TRUCO] Botón rect: " + btnRect);
+
+        boolean dentroDelBoton = btnRect.contains(touch.x, touch.y);
+        boolean trucoDisponible = isTrucoDisponible();
+
+        System.out.println("[BOTON_TRUCO] Dentro del botón: " + dentroDelBoton);
+        System.out.println("[BOTON_TRUCO] Truco disponible: " + trucoDisponible);
+        System.out.println("[BOTON_TRUCO] Estado Truco: " + partida.getEstadoTruco());
+        System.out.println("[BOTON_TRUCO] Mano actual: " + partida.getManoActual());
+        System.out.println("[BOTON_TRUCO] Es mi turno: " + partida.esMiTurnoLocal());
+        System.out.println("[BOTON_TRUCO] Soy mano: " + partida.soyJugadorMano());
+        System.out.println("[BOTON_TRUCO] Primer turno: " + partida.esPrimerTurnoEnMano());
+
+        if (dentroDelBoton && trucoDisponible) {
+            System.out.println("[BOTON_TRUCO] ✅ Condiciones cumplidas, intentando cantar truco...");
+            boolean resultado = intentarCantarTruco();
+            System.out.println("[BOTON_TRUCO] Resultado: " + resultado);
+            System.out.println("[BOTON_TRUCO] ========================================\n");
+            return resultado;
+        } else {
+            if (!dentroDelBoton) {
+                System.out.println("[BOTON_TRUCO] ❌ Click fuera del botón");
+            }
+            if (!trucoDisponible) {
+                System.out.println("[BOTON_TRUCO] ❌ Truco no disponible");
+            }
+            System.out.println("[BOTON_TRUCO] ⏭️ Pasando el evento al siguiente processor");
+            System.out.println("[BOTON_TRUCO] ========================================\n");
+            return false;
         }
-        return false;
     }
 
     private boolean intentarCantarTruco() {
-        if (!partida.cantarTruco()) {
-            System.out.println("[CLIENTE] No puedes cantar truco ahora");
+        System.out.println("[BOTON_TRUCO] --> intentarCantarTruco()");
+
+        boolean validacion = partida.cantarTruco();
+        System.out.println("[BOTON_TRUCO] partida.cantarTruco() retornó: " + validacion);
+
+        if (!validacion) {
+            System.out.println("[BOTON_TRUCO] ❌ Validación falló en PartidaCliente");
             return false;
         }
 
         gestorSonido.reproducirSonido("truco");
-        System.out.println("[CLIENTE] Enviando TRUCO al servidor...");
+        System.out.println("[BOTON_TRUCO] 🔊 Sonido reproducido");
+
+        System.out.println("[BOTON_TRUCO] 📤 Enviando mensaje TRUCO al servidor...");
         hc.enviarMensaje("TRUCO");
+
+        System.out.println("[BOTON_TRUCO] 🔒 Notificando truco enviado (bloqueo local)...");
         hc.notificarTrucoEnviado();
+
+        System.out.println("[BOTON_TRUCO] ✅ Truco cantado exitosamente");
         return true;
     }
+
     @Override public boolean keyUp(int keycode) { return false; }
     @Override public boolean keyTyped(char character) { return false; }
     @Override public boolean touchUp(int screenX, int screenY, int pointer, int button) { return false; }

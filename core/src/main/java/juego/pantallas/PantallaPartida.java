@@ -1,5 +1,6 @@
 package juego.pantallas;
 
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -170,6 +171,26 @@ public class PantallaPartida implements Screen, GameController {
         Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
 
         crearBotonTruco();
+        System.out.println("\n[PANTALLA] ========================================");
+        System.out.println("[PANTALLA] Configurando InputMultiplexer");
+        System.out.println("[PANTALLA] ========================================\n");
+
+        // ✅ AGREGAR BOTÓN PRIMERO
+        InputMultiplexer multiplexer = manoManager.getInputMultiplexer();
+        System.out.println("[PANTALLA] Agregando BotonTruco como PRIMER processor");
+        multiplexer.addProcessor(botonTruco);
+
+        // ✅ CONFIGURAR COMO INPUT PRINCIPAL
+        System.out.println("[PANTALLA] Configurando multiplexer como InputProcessor principal");
+        Gdx.input.setInputProcessor(multiplexer);
+
+        // ✅ VERIFICAR ORDEN
+        System.out.println("[PANTALLA] Orden de processors:");
+        for (int i = 0; i < multiplexer.getProcessors().size; i++) {
+            System.out.println("[PANTALLA]   " + i + ": " + multiplexer.getProcessors().get(i).getClass().getSimpleName());
+        }
+        System.out.println("[PANTALLA] ========================================\n");
+
 
         pantallaFinal = new PantallaFinal(
                 viewport, hud, WORLD_WIDTH, WORLD_HEIGHT, miRol
@@ -336,20 +357,33 @@ public class PantallaPartida implements Screen, GameController {
             System.out.println("[UPDATE] inicioRonda=true, cartas disponibles: " + cartasDisponibles);
 
             if (cartasDisponibles == 3) {
-                System.out.println("[UPDATE]  Inicializando mano con 3 cartas");
+                System.out.println("\n[PANTALLA] ========================================");
+                System.out.println("[PANTALLA] Inicializando mano con 3 cartas");
+                System.out.println("[PANTALLA] ========================================\n");
 
-                manoManager.getInputMultiplexer().clear();
+                InputMultiplexer multiplexer = manoManager.getInputMultiplexer();
 
+                System.out.println("[PANTALLA] Limpiando multiplexer...");
+                multiplexer.clear();
+
+                System.out.println("[PANTALLA] RE-agregando BotonTruco como PRIMER processor");
+                multiplexer.addProcessor(botonTruco);
+
+                System.out.println("[PANTALLA] Inicializando cartas (se agregarán al multiplexer)");
                 manoManager.inicializarMano();
-                manoManager.getInputMultiplexer().addProcessor(botonTruco);
-                //  IMPORTANTE: Asegurarse de que el InputProcessor esté activo
-                Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
+
+                System.out.println("[PANTALLA] Re-configurando InputProcessor");
+                Gdx.input.setInputProcessor(multiplexer);
+
+                // ✅ VERIFICAR ORDEN NUEVAMENTE
+                System.out.println("[PANTALLA] Orden FINAL de processors:");
+                for (int i = 0; i < multiplexer.getProcessors().size; i++) {
+                    System.out.println("[PANTALLA]   " + i + ": " + multiplexer.getProcessors().get(i).getClass().getSimpleName());
+                }
+                System.out.println("[PANTALLA] ========================================\n");
 
                 animacion.iniciarAnimacionReparto();
-
                 inicioRonda = false;
-                System.out.println("[UPDATE] inicioRonda ahora es false");
-                System.out.println("[UPDATE] InputProcessor configurado correctamente");
             }
         }
     }
