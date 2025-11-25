@@ -17,4 +17,5 @@ public interface GameController {
     void onTrucoActualizado(String estadoTruco, int manoTruco, String ultimoCanto);
     void onTrucoRespondido(String respuesta, String nuevoEstadoTruco); // ✅ NUEVO
     void onTrucoEnviadoLocal();
+    void onServidorDesconectado();
 }

@@ -72,27 +72,32 @@ public class GestorSonido {
         }
     }
 
-    /**
-     * Reproduce una música de fondo en loop
-     */
     public void reproducirMusica(String nombre) {
         if (!musicaHabilitada) return;
 
         Music musica = musicas.get(nombre);
         if (musica != null) {
-            // Detener música actual si existe
-            if (musicaActual != null && musicaActual.isPlaying()) {
+
+            // 1. **PUNTO CRÍTICO:** Si ya hay música sonando y NO es la misma pista, detenerla.
+            // Esto previene la superposición de pistas.
+            if (musicaActual != null && musicaActual != musica) {
                 musicaActual.stop();
             }
 
+            // 2. Si ya es la misma música Y está sonando, no hacemos nada.
+            // Esto previene que una pantalla llame a reproducir la misma pista en cada `show()`.
+            if (musicaActual == musica && musicaActual.isPlaying()) {
+                return;
+            }
+
+            // 3. Si llega aquí, es porque es una nueva pista o la pista actual estaba detenida/pausada.
             musicaActual = musica;
-            musicaActual.setLooping(true);
             musicaActual.setVolume(volumenMusica);
+            musicaActual.setLooping(true);
             musicaActual.play();
 
-            System.out.println("[SONIDO] Reproduciendo música: " + nombre);
         } else {
-            System.err.println("[SONIDO] Música no encontrada: " + nombre);
+            System.err.println("Música no encontrada: " + nombre);
         }
     }
 

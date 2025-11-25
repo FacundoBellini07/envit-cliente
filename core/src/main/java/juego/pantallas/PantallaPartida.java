@@ -70,6 +70,7 @@ public class PantallaPartida implements Screen, GameController {
     private BotonRespuesta botonRespuesta;
 
     private boolean rivalDesconectado = false;
+    private boolean servidorDesconectado = false;
     private boolean debeVolverAlMenu = false;
     private HiloCliente hc;
     private int mano = 0;
@@ -214,6 +215,11 @@ public class PantallaPartida implements Screen, GameController {
         if(!empieza){
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+            viewport.apply();
+
+            batch.setProjectionMatrix(viewport.getCamera().combined);
+
             hud.dibujarMensajeCentral(batch, "ESPERANDO RIVAL...", Color.WHITE);
         }
         else {
@@ -234,6 +240,39 @@ public class PantallaPartida implements Screen, GameController {
                 font.setColor(Color.RED);
 
                 String msg = "¡RIVAL DESCONECTADO!";
+                GlyphLayout layout = new GlyphLayout(font, msg);
+                float textX = (WORLD_WIDTH - layout.width) / 2f;
+                float textY = (WORLD_HEIGHT + layout.height) / 2f + 50;
+                font.draw(batch, msg, textX, textY);
+
+                font.getData().setScale(1.0f);
+                font.setColor(Color.WHITE);
+                String msg2 = "Toca la pantalla para volver al menú";
+                layout = new GlyphLayout(font, msg2);
+                textX = (WORLD_WIDTH - layout.width) / 2f;
+                textY = (WORLD_HEIGHT - layout.height) / 2f - 50;
+                font.draw(batch, msg2, textX, textY);
+
+                batch.end();
+
+                if (Gdx.input.justTouched()) {
+                    game.setScreen(new PantallaMenu((juego.Principal) game));
+                    dispose();
+                }
+                return;
+            }
+            if (servidorDesconectado) {
+                Gdx.gl.glClearColor(0, 0, 0, 1);
+                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+                hc.detener();
+                viewport.apply();
+                batch.setProjectionMatrix(viewport.getCamera().combined);
+                batch.begin();
+
+                font.getData().setScale(1.5f);
+                font.setColor(Color.RED);
+
+                String msg = "¡SERVIDOR DESCONECTADO!";
                 GlyphLayout layout = new GlyphLayout(font, msg);
                 float textX = (WORLD_WIDTH - layout.width) / 2f;
                 float textY = (WORLD_HEIGHT + layout.height) / 2f + 50;
@@ -525,6 +564,11 @@ public class PantallaPartida implements Screen, GameController {
         this.deboResponderTruco = true;
         this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
         botonRespuesta.mostrar();
+
+    }
+    public void onServidorDesconectado() { // ✅ NUEVO
+        System.out.println("[PANTALLA] Servidor desconectado (TIMEOUT)");
+        this.servidorDesconectado = true;
 
     }
     public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {

@@ -534,6 +534,7 @@ public class PantallaMenu implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
+        GestorSonido.getInstancia().detenerMusica();
         shapeRenderer.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (optionsBackgroundTexture != null) optionsBackgroundTexture.dispose();

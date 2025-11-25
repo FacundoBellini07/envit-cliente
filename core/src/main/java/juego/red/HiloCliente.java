@@ -16,16 +16,22 @@ public class HiloCliente extends Thread {
     private InetAddress ipserver;
     private int puerto = 30243;
     private boolean fin = false;
+    private InetAddress ipBroadcast;
 
     private GameController listener;
-
+    private long ultimoMensajeServidor = System.currentTimeMillis();
+    private Timer timerCheckerServidor;
+    private final long TIEMPO_LIMITE_SERVER = 4000;
     private boolean conectado = false;
     private Timer timerConexion;
 
+
     public HiloCliente(GameController listener) {
         try {
+            iniciarCheckerServidor();
             this.listener = listener;
-            ipserver = InetAddress.getByName("255.255.255.255");
+           ipBroadcast = InetAddress.getByName("255.255.255.255");
+            ipserver = ipBroadcast;
             conexion = new DatagramSocket();
 
             // ✅ NUEVO: Iniciar reintentos de conexión
@@ -35,7 +41,27 @@ public class HiloCliente extends Thread {
             e.printStackTrace();
         }
     }
-
+    private void iniciarCheckerServidor() {
+        timerCheckerServidor = new Timer();
+        timerCheckerServidor.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (conectado && (System.currentTimeMillis() - ultimoMensajeServidor > TIEMPO_LIMITE_SERVER)) {
+                    System.out.println("[CLIENTE] 🚨 TIMEOUT del SERVIDOR. Asumiendo desconexión.");
+                    detener(); // Cierra el socket
+                    if (listener != null) {
+                        listener.onServidorDesconectado(); // 🚨 NUEVO MÉTODO
+                    }
+                }
+            }
+        }, 1000, 1000); // Chequear cada 1 segundo
+    }
+    private void detenerCheckerServidor() {
+        if (timerCheckerServidor != null) {
+            timerCheckerServidor.cancel();
+            timerCheckerServidor = null;
+        }
+    }
     private void iniciarReintentos() {
         timerConexion = new Timer();
         timerConexion.scheduleAtFixedRate(new TimerTask() {
@@ -85,6 +111,7 @@ public class HiloCliente extends Thread {
     }
 
     private void procesarMensaje(DatagramPacket dp) {
+        ultimoMensajeServidor = System.currentTimeMillis();
         String mensaje = (new String(dp.getData())).trim();
         System.out.println("[CLIENTE] <<<< RECIBIDO: " + mensaje);
 
@@ -127,6 +154,9 @@ public class HiloCliente extends Thread {
             if (listener != null) {
                 listener.onTrucoRival();
             }
+        }
+        else if (mensaje.equals("PING")) {
+            return;
         }
         else if (mensaje.startsWith("CARTAS:")) {
             System.out.println("[CLIENTE] ✅ Mensaje CARTAS recibido!");
@@ -274,10 +304,25 @@ public class HiloCliente extends Thread {
         System.out.println("[CLIENTE] Fin del procesamiento de cartas");
         System.out.println("[CLIENTE] ========================================");
     }
+    public void reiniciarBusqueda() {
+        detener();
+        try {
+            conexion = new DatagramSocket(); // Creamos un nuevo socket para la nueva búsqueda
+        } catch (SocketException e) {
+            System.err.println("[CLIENTE] Error al reabrir el socket: " + e.getMessage());
+            e.printStackTrace();
+            return; // Salir si falla
+        }
+        fin = false;
+        conectado = false;
+        ipserver = ipBroadcast; // Volver a apuntar a la IP de Broadcast
+        iniciarReintentos();
+    }
 
     public void detener() {
         fin = true;
         detenerReintentos();
+        detenerCheckerServidor(); // ✅ AÑADIR AQUI
         if (conexion != null && !conexion.isClosed()) {
             conexion.close();
         }
