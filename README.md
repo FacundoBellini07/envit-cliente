@@ -5,7 +5,7 @@
 - Colombo Francisco
 
 ## Descripción del Proyecto
-**Envit** es un juego multijugador en línea que permite a dos jugadores enfrentarse en una partida de Truco. A diferencia del Truco tradicional, incorpora objetos con efectos especiales que influyen activamente en el desarrollo de la partida, cambiando la estrategia y dinámica del juego.
+**Envit** es un juego multijugador en línea que permite a dos jugadores enfrentarse en una partida de Truco de forma local.
 
 Las partidas se juegan en tiempo real y no tienen límite de tiempo por jugada, lo que permite un ritmo relajado y adaptable a los jugadores.
 
