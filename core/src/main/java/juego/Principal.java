@@ -13,6 +13,8 @@ public class Principal extends Game {
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
+        System.out.println("[PRINCIPAL] Cargando recursos de Carta...");
+        System.out.println("[PRINCIPAL] Recursos cargados");
 		setScreen(new PantallaMenu(this));
 	}
 

@@ -13,11 +13,11 @@ sounds/envit.ogg
 sounds/fuego.mp3
 sounds/truco.mp3
 sounds/victoria.wav
-sprites/Baraja2.png
 sprites/baraja.png
+sprites/baraja2.png
 sprites/btn_jugar.png
 sprites/casilla.png
-sprites/dorso.PNG
+sprites/dorso.png
 sprites/dorsoM.png
 sprites/marcoCarta.png
 sprites/mazo_sprite.png
