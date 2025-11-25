@@ -24,6 +24,8 @@ public class PartidaCliente {
     private EstadoTruco estadoTruco = EstadoTruco.SIN_TRUCO;
     private int manoTrucoUsada = -1;
     private TipoJugador ultimoQueCanto = null;
+    private boolean trucoQueridoEnEstaMano = false;
+
     private Jugador ganador = null;
 
     // ✅ NUEVO: Bloqueo local mientras esperamos respuesta del servidor
@@ -48,6 +50,8 @@ public class PartidaCliente {
                 ? EstadoTurno.ESPERANDO_JUGADOR_1
                 : EstadoTurno.ESPERANDO_JUGADOR_2;
 
+        this.trucoEnviadoEsperandoRespuesta = false;
+        this.trucoQueridoEnEstaMano = false;
         this.manoActual = manoActual;
         this.estadoTruco = EstadoTruco.SIN_TRUCO;
         this.ganador = null;
@@ -71,6 +75,9 @@ public class PartidaCliente {
         // ✅ BLOQUEAR si ya enviamos un truco y estamos esperando respuesta
         if (trucoEnviadoEsperandoRespuesta) {
             System.out.println("[CLIENTE] Truco bloqueado: esperando respuesta del servidor");
+            return false;
+        }
+        if (trucoQueridoEnEstaMano) {
             return false;
         }
 
@@ -209,5 +216,9 @@ public class PartidaCliente {
     public void setEstadoTruco(EstadoTruco estadoTruco) {
         this.estadoTruco = estadoTruco;
         System.out.println("[CLIENTE] Estado de Truco actualizado manualmente a: " + estadoTruco);
+    }
+    public void setTrucoQuerido(boolean querido) {
+        this.trucoQueridoEnEstaMano = querido;
+        System.out.println("[CLIENTE] Estado trucoQuerido actualizado a: " + querido);
     }
 }

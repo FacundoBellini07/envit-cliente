@@ -146,7 +146,7 @@ public class BotonTruco implements InputProcessor {
 
         font.draw(batch, textoBoton, textX, textY);
 
-        if (partida.isTrucoActivoEnManoActual()) {
+        if (partida.isTrucoActivoEnManoActual() && partida.getManoActual() == 0) {
             font.getData().setScale(0.5f);
             font.setColor(colorIndicador);
             String textoActivo = "x" + partida.getEstadoTruco().getPuntos();

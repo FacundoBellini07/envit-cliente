@@ -22,56 +22,36 @@ public class BotonRespuesta implements InputProcessor {
 
     private BitmapFont font;
     private Viewport viewport;
-
-    private Color colorNormal = new Color(0.2f, 0.8f, 0.2f, 0.9f); // Verde para QUIERO
-    private Color colorHover = new Color(0.3f, 1.0f, 0.3f, 1f);
-    private Color colorTexto = Color.WHITE;
-
-    private float btnAncho;
-    private float btnAlto;
-
     private HiloCliente hc;
     private GestorSonido gestorSonido;
+    private BotonTruco botonTrucoLocal;
+    private Color colorNormal = new Color(0.9f, 0.1f, 0.1f, 0.9f);
+    private Color colorHover = new Color(1.0f, 0.2f, 0.2f, 1f);
+    private Color colorTexto = Color.WHITE;
 
     private boolean visible = false;
 
     public BotonRespuesta(float x, float y, float ancho, float alto,
                           BitmapFont font, Viewport viewport, HiloCliente hc) {
-        this.btnAncho = ancho;
-        this.btnAlto = alto;
+        this.btnRect = new Rectangle(x, y, ancho, alto);
         this.font = font;
         this.viewport = viewport;
         this.hc = hc;
-
-        this.btnRect = new Rectangle(x, y, ancho, alto);
-        this.animacionPulso = 0f;
         this.gestorSonido = GestorSonido.getInstancia();
-
-        System.out.println("[BOTON_RESPUESTA] ✅ Creado en posición (" + x + ", " + y + ") con tamaño " + ancho + "x" + alto);
     }
 
     public void mostrar() {
         this.visible = true;
-        System.out.println("[BOTON_RESPUESTA] 👁️ Mostrando botón QUIERO");
     }
 
     public void ocultar() {
         this.visible = false;
-        System.out.println("[BOTON_RESPUESTA] 🙈 Ocultando botón");
-    }
-
-    public boolean isVisible() {
-        return visible;
     }
 
     public void update(float delta) {
         if (!visible) return;
-
         animacionPulso += delta * 3f;
-        if (animacionPulso > Math.PI * 2) {
-            animacionPulso = 0f;
-        }
-
+        if (animacionPulso > Math.PI * 2) animacionPulso = 0f;
         actualizarHover();
     }
 
@@ -79,7 +59,7 @@ public class BotonRespuesta implements InputProcessor {
         if (!visible) return;
 
         Color colorBtn;
-        float escala = 1.0f;
+        float escala = 1.3f; // ✅ CAMBIO: Escala idéntica a BotonTruco (era 1.0f)
 
         if (hovered) {
             float pulso = (float)Math.sin(animacionPulso) * 0.1f + 0.9f;
@@ -101,53 +81,33 @@ public class BotonRespuesta implements InputProcessor {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        // Fondo del botón
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(colorBtn);
-        shapeRenderer.rect(
-                btnRect.x - offsetX,
-                btnRect.y - offsetY,
-                btnRect.width * escala,
-                btnRect.height * escala
-        );
+        shapeRenderer.rect(btnRect.x - offsetX, btnRect.y - offsetY, btnRect.width * escala, btnRect.height * escala);
         shapeRenderer.end();
 
-        // Borde del botón
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(
-                btnRect.x - offsetX,
-                btnRect.y - offsetY,
-                btnRect.width * escala,
-                btnRect.height * escala
-        );
+        shapeRenderer.rect(btnRect.x - offsetX, btnRect.y - offsetY, btnRect.width * escala, btnRect.height * escala);
         shapeRenderer.end();
-
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        // Texto del botón
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
-
         font.setColor(colorTexto);
-        font.getData().setScale(0.8f);
+        font.getData().setScale(0.8f); // ✅ CAMBIO: Escala de fuente a 0.8f (igual que BotonTruco)
 
         String textoBoton = "QUIERO";
         GlyphLayout layout = new GlyphLayout(font, textoBoton);
-
         float textX = btnRect.x + (btnRect.width - layout.width) / 2f;
         float textY = btnRect.y + (btnRect.height + layout.height) / 2f;
 
         font.draw(batch, textoBoton, textX, textY);
-
         batch.end();
     }
 
     private void actualizarHover() {
-        Vector2 mouse = viewport.unproject(
-                new Vector2(Gdx.input.getX(), Gdx.input.getY())
-        );
-
+        Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
         hovered = btnRect.contains(mouse.x, mouse.y);
     }
 
@@ -158,18 +118,12 @@ public class BotonRespuesta implements InputProcessor {
         Vector2 touch = viewport.unproject(new Vector2(screenX, screenY));
 
         if (btnRect.contains(touch.x, touch.y)) {
-            System.out.println("[BOTON_RESPUESTA] ✅ Usuario eligió QUIERO");
-            gestorSonido.reproducirSonido("click");
-
-            // Enviar mensaje al servidor
+            System.out.println("[BOTON_RESPUESTA] ✅ Click detectado en QUIERO");
+            gestorSonido.reproducirSonido("truco"); // Usamos sonido truco por consistencia o el que prefieras
             hc.enviarMensaje("QUIERO");
-
-            // Ocultar botón
             ocultar();
-
             return true;
         }
-
         return false;
     }
 

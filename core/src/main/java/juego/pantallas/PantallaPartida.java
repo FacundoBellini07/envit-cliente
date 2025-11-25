@@ -327,6 +327,10 @@ public class PantallaPartida implements Screen, GameController {
         // ===============================================
         animacion.update(delta);
 
+        if (partida.getManoActual() > 0) {
+            mostrarMensajeTrucoRival = false;
+        }
+
         if (mostrarMensajeTrucoRival) {
             tiempoMensajeTrucoRival -= delta;
             if (tiempoMensajeTrucoRival <= 0) {
@@ -377,6 +381,7 @@ public class PantallaPartida implements Screen, GameController {
 
                 System.out.println("[PANTALLA] RE-agregando BotonTruco como PRIMER processor");
                 multiplexer.addProcessor(botonTruco);
+                multiplexer.addProcessor(botonRespuesta);
 
                 System.out.println("[PANTALLA] Inicializando cartas (se agregarán al multiplexer)");
                 manoManager.inicializarMano();
@@ -425,9 +430,8 @@ public class PantallaPartida implements Screen, GameController {
         float btnRespuestaAncho = 80f;
         float btnRespuestaAlto = 60f;
         float margenIzq = 20f;
-        float espacioEntreBotones = 10f;
+        float espacioEntreBotones = 30f;
 
-        // Posición: pegado a la derecha del botón de truco
         float btnRespuestaX = margenIzq + 80f + espacioEntreBotones; // 80f es el ancho del botón truco
         float btnRespuestaY = (WORLD_HEIGHT - btnRespuestaAlto) / 2f;
 
@@ -518,28 +522,26 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {
         System.out.println("[PANTALLA] Rival respondió: " + respuesta);
 
-        this.esperandoRespuestaRival = false; // 🔓 DESBLOQUEA MI INTERFAZ
-
-        // ✅ OCULTAR BOTÓN DE RESPUESTA
+        this.esperandoRespuestaRival = false;
         botonRespuesta.ocultar();
 
         if (respuesta.equals("QUIERO")) {
             System.out.println("[PANTALLA] Truco aceptado, el juego continúa.");
             this.deboResponderTruco = false;
+            partida.setTrucoQuerido(true);
         }
         else if (respuesta.equals("SUBIDA")) {
             System.out.println("[PANTALLA] El rival subió a: " + nuevoEstadoTruco);
 
-            // ✅ Si subió a VALE_CUATRO, no necesito responder
-            if (nuevoEstadoTruco.equals("VALE_CUATRO_CANTADO")) {
-                System.out.println("[PANTALLA] Vale 4 alcanzado, no se puede subir más");
-                this.deboResponderTruco = false;
-            } else {
-                // Si subió a RETRUCO, ahora debo responder
-                this.deboResponderTruco = true;
-                partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
+            partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
 
-                // ✅ MOSTRAR BOTÓN DE RESPUESTA NUEVAMENTE
+            if (nuevoEstadoTruco.equals("VALE_CUATRO_CANTADO")) {
+                System.out.println("[PANTALLA] Vale 4 alcanzado. Ocultando botón de respuesta.");
+                this.deboResponderTruco = false;
+                botonRespuesta.ocultar();
+            } else {
+                // Si es Retruco, mostramos el botón
+                this.deboResponderTruco = true;
                 botonRespuesta.mostrar();
             }
         }
@@ -547,6 +549,9 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoEnviadoLocal() {
         this.esperandoRespuestaRival = true; // 🔒 BLOQUEA MIS CARTAS y botones de canto
         this.deboResponderTruco = false;
+        if (botonRespuesta != null) {
+            botonRespuesta.ocultar();
+        }
         System.out.println("[PANTALLA] Truco enviado. Esperando respuesta del rival...");
     }
 
@@ -589,6 +594,7 @@ public class PantallaPartida implements Screen, GameController {
         zonaJuegoRival.limpiar();
         jugadores.get(0).limpiarMazo();
         jugadores.get(1).limpiarMazo();
+        partida.setTrucoQuerido(false);
 
         if (manoRivalRenderer != null) {
             manoRivalRenderer.reiniciar();
