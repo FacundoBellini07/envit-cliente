@@ -14,5 +14,7 @@ public interface GameController {
     void onCartaRecibida(int valor, Palo palo);
     void onNuevaRonda();
     void onVolverAlMenu();
-    void onTrucoActualizado(boolean trucoUsado, int manoTruco);
+    void onTrucoActualizado(String estadoTruco, int manoTruco, String ultimoCanto);
+    void onTrucoRespondido(String respuesta, String nuevoEstadoTruco); // ✅ NUEVO
+    void onTrucoEnviadoLocal();
 }

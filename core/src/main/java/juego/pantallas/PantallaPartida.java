@@ -3,7 +3,6 @@ package juego.pantallas;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -28,7 +27,7 @@ public class PantallaPartida implements Screen, GameController {
 
     private Game game;
     private Mazo mazo;
-    private Partida partida;
+    private PartidaCliente partida;
     private ArrayList<Jugador> jugadores = new ArrayList<Jugador>();
     private SpriteBatch batch = new SpriteBatch();
     private Texture fondoPartida;
@@ -37,6 +36,9 @@ public class PantallaPartida implements Screen, GameController {
     private Texture casilla;
     private boolean inicioRonda = true;
     private Animacion animacion;
+
+    private boolean esperandoRespuestaRival = false; // Si yo (P1) canté Truco
+    private boolean deboResponderTruco = false;
 
     private ShapeRenderer shapeRenderer;
     private OrthographicCamera camera;
@@ -80,7 +82,7 @@ public class PantallaPartida implements Screen, GameController {
     public PantallaPartida(Game game) {
         this.game = game;
         this.crearJugadores();
-        partida = new Partida();
+        partida = new PartidaCliente();
     }
 
     private void crearJugadores() {
@@ -235,7 +237,16 @@ public class PantallaPartida implements Screen, GameController {
                 pantallaFinal.render(batch, shapeRenderer);
                 return;
             }
+            boolean esMiTurnoDeCartas = partida.esMiTurnoLocal();
+            boolean bloqueoPorTruco = esperandoRespuestaRival || deboResponderTruco;
 
+            // Solo permito input si es mi turno Y NO estoy bloqueado por un truco pendiente
+            manoManager.setEsMiTurno(esMiTurnoDeCartas && !bloqueoPorTruco);
+
+            // DIBUJAR GUI DE RESPUESTA SI ES NECESARIO
+            if (deboResponderTruco) {
+
+            }
             // 1. DIBUJAR FONDO Y MAZO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
             this.batch.begin();
@@ -272,11 +283,18 @@ public class PantallaPartida implements Screen, GameController {
             // 6. DIBUJAR HUD
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
             hud.render(batch, partida.getManoActual(), partida.esMiTurnoLocal(),
-                    partida.isTrucoActivoEnManoActual(), partida.getManoTrucoUsada());
+                    partida.getEstadoTruco());
         }
     }
 
     public void update(float delta) {
+        if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
+            botonTruco.update(delta);
+        }
+
+        // ===============================================
+        // 2. RESTO DE ACTUALIZACIONES (Animaciones, timers, etc.)
+        // ===============================================
         animacion.update(delta);
 
         if (mostrarMensajeTrucoRival) {
@@ -286,13 +304,11 @@ public class PantallaPartida implements Screen, GameController {
             }
         }
 
+        // 3. Control de Turno del ManoManager (que hace el drag de cartas)
+        // Este código DEBE IR DESPUÉS del chequeo del botón de Truco.
         manoManager.setEsMiTurno(partida.esMiTurnoLocal());
 
-        if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
-            botonTruco.update(delta);
-            botonTruco.detectarClick();
-        }
-
+        // 4. Chequeos de fin de partida y finalización
         if (pantallaFinal.isActiva()) {
             boolean solicitudVolver = pantallaFinal.update(delta);
             if (solicitudVolver) {
@@ -300,19 +316,12 @@ public class PantallaPartida implements Screen, GameController {
             }
             return;
         }
-
         if (partida.partidaTerminada() && !pantallaFinal.isActiva()) {
-            pantallaFinal.activar(
-                    partida.getGanador(),
-                    jugadores.get(0),
-                    jugadores.get(1)
-            );
-
-            Gdx.input.setInputProcessor(null);
-            System.out.println("¡PARTIDA TERMINADA! Ganador: " + partida.getGanador().getNombre());
+            // ... (Tu código para activar pantalla final) ...
             return;
         }
 
+        // 5. Lógica de inicio de ronda
         if (inicioRonda) {
             Carta[] miMano = jugadores.get(0).getMano();
 
@@ -332,7 +341,7 @@ public class PantallaPartida implements Screen, GameController {
                 manoManager.getInputMultiplexer().clear();
 
                 manoManager.inicializarMano();
-
+                manoManager.getInputMultiplexer().addProcessor(botonTruco);
                 //  IMPORTANTE: Asegurarse de que el InputProcessor esté activo
                 Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
 
@@ -429,7 +438,29 @@ public class PantallaPartida implements Screen, GameController {
     }
     public void onTrucoRival(){
         this.mostrarMensajeTrucoRival = true;
+        this.deboResponderTruco = true;
         this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
+    }
+    public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {
+        this.esperandoRespuestaRival = false; // 🔓 DESBLOQUEA MI INTERFAZ (P1)
+
+        if (respuesta.equals("QUIERO")) {
+            // El juego continúa con el Truco aceptado (P1 puede tirar carta)
+            System.out.println("[PANTALLA] Truco aceptado, el juego continúa.");
+        }
+        else if (respuesta.equals("SUBIDA")) {
+            // El rival subió (P1 debe responder ahora)
+            System.out.println("[PANTALLA] El rival subió a: " + nuevoEstadoTruco);
+            // P1 debe pasar a estado "deboResponderTruco" ahora para responder el RETRUCO
+            this.deboResponderTruco = true;
+            // Actualiza el estado del truco en PartidaCliente
+            partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
+        }
+    }
+    public void onTrucoEnviadoLocal() {
+        this.esperandoRespuestaRival = true; // 🔒 BLOQUEA MIS CARTAS y botones de canto
+        this.deboResponderTruco = false;
+        System.out.println("[PANTALLA] Truco enviado. Esperando respuesta del rival...");
     }
 
     public void onCartaRecibida(int valor, Palo palo) {
@@ -458,12 +489,12 @@ public class PantallaPartida implements Screen, GameController {
         }
     }
 
-    public void onTrucoActualizado(boolean trucoUsado, int manoTruco) {
-     if (partida != null) {
-         partida.actualizarTruco(trucoUsado, manoTruco);
-         System.out.println("[PANTALLA] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
-         }
-     }
+    public void onTrucoActualizado(String estadoTruco, int manoTruco, String ultimoCanto) {
+        if (partida != null) {
+            partida.actualizarTruco(estadoTruco, manoTruco, ultimoCanto);
+            System.out.println("[PANTALLA] Truco actualizado: " + estadoTruco + ", mano=" + manoTruco + ", último=" + ultimoCanto);
+        }
+    }
 
     public void onNuevaRonda() {
         System.out.println("[PANTALLA] Nueva ronda iniciada por el servidor");
@@ -514,6 +545,8 @@ public class PantallaPartida implements Screen, GameController {
         System.out.println("El rival se desconectó");
         this.rivalDesconectado = true;
     }
+
+
 
     @Override
     public void resize(int width, int height) {

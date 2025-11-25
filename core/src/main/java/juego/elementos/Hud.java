@@ -60,7 +60,7 @@ public class Hud {
     }
 
     public void render(SpriteBatch batch, int manoActual, boolean esTurnoJugador,
-                       boolean trucoActivo, int manoTruco) {
+                       EstadoTruco estadoTruco) {
         batch.begin();
 
         dibujarPuntosJugador(batch, jugador1.getPuntos());
@@ -69,11 +69,38 @@ public class Hud {
         dibujarInfoMano(batch, manoActual);
         dibujarIndicadorTurno(batch, esTurnoJugador);
 
-        if (trucoActivo && manoActual == manoTruco) {
-            dibujarIndicadorTruco(batch, manoActual);
+        // ✅ CORRECCIÓN: Mostrar truco si está activo (sin importar la mano actual)
+        if (estadoTruco != EstadoTruco.SIN_TRUCO) {
+            dibujarIndicadorTruco(batch, estadoTruco);
         }
 
         batch.end();
+    }
+
+    private void dibujarIndicadorTruco(SpriteBatch batch, EstadoTruco estadoTruco) {
+        fontGrande.setColor(colorTruco);
+
+        String textoTruco;
+        switch (estadoTruco) {
+            case TRUCO_CANTADO:
+                textoTruco = "¡TRUCO! x2";
+                break;
+            case RETRUCO_CANTADO:
+                textoTruco = "¡RETRUCO! x3";
+                break;
+            case VALE_CUATRO_CANTADO:
+                textoTruco = "¡VALE 4! x4";
+                break;
+            default:
+                return;
+        }
+
+        GlyphLayout layout = new GlyphLayout(fontGrande, textoTruco);
+
+        float x = (worldWidth - layout.width) / 2f;
+        float y = worldHeight - margen - 40;
+
+        fontGrande.draw(batch, textoTruco, x, y);
     }
 
     private void dibujarPuntosJugador(SpriteBatch batch, int puntos) {

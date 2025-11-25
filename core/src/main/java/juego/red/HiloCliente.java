@@ -138,6 +138,12 @@ public class HiloCliente extends Thread {
                 listener.onNuevaRonda();
             }
         }
+        else if (mensaje.startsWith("RESPUESTA_TRUCO:")) {
+            String[] partes = mensaje.split(":");
+            String respuesta = partes[1]; // QUIERO o SUBIDA
+            String nuevoEstado = partes.length > 2 ? partes[2] : "";
+            if (listener != null) listener.onTrucoRespondido(respuesta, nuevoEstado);
+        }
         else if (mensaje.startsWith("GANADOR:")) {
             String idStr = mensaje.split(":")[1];
             int idGanador = Integer.parseInt(idStr);
@@ -198,13 +204,14 @@ public class HiloCliente extends Thread {
                 jugadorMano
         );
 
-        if (partes.length >= 7) {
-            boolean trucoUsado = partes[5].equals("1");
+        if (partes.length >= 8) {
+            String estadoTrucoStr = partes[5];
             int manoTruco = Integer.parseInt(partes[6]);
+            String ultimoCantoStr = partes[7].equals("null") ? null : partes[7];
 
-            listener.onTrucoActualizado(trucoUsado, manoTruco);
+            listener.onTrucoActualizado(estadoTrucoStr, manoTruco, ultimoCantoStr);
 
-            System.out.println("[CLIENTE] Truco actualizado: usado=" + trucoUsado + ", mano=" + manoTruco);
+            System.out.println("[CLIENTE] Truco actualizado: " + estadoTrucoStr + ", mano=" + manoTruco + ", último=" + ultimoCantoStr);
         }
     }
 
@@ -222,7 +229,12 @@ public class HiloCliente extends Thread {
             }
         }
     }
-
+    public void notificarTrucoEnviado() {
+        if (listener != null) {
+            // Llama al nuevo método en PantallaPartida para que se bloquee localmente.
+            listener.onTrucoEnviadoLocal();
+        }
+    }
     private void procesarCartasRecibidas(String mensaje) {
         mensaje = mensaje.replace("CARTAS:", "");
         String[] cartas = mensaje.split(",");
