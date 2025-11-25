@@ -2,28 +2,21 @@ package juego.pantallas;
 
 import juego.elementos.*;
 import juego.personajes.Jugador;
-import juego.personajes.RivalBot;
 import juego.personajes.TipoJugador;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class Partida {
 
-    // Elementos visuales y lógicos básicos
     private ArrayList<Carta> mazoRevuelto = new ArrayList<>();
     private int indiceMazo = 0;
 
-    // Estados y control de flujo
     private EstadoTurno estadoActual;
     private int manoActual = 0;
-    private final int MAX_MANOS = 3;
-
-    // Referencias a objetos de la pantalla
     private ZonaJuego zonaJugador1;
     private ZonaJuego zonaJugador2;
     private Jugador jugador1;
     private Jugador jugador2;
-    private RivalBot rivalBot;
 
     // Quién soy yo y quién tiene el turno
     private TipoJugador jugadorLocal;
@@ -32,7 +25,6 @@ public class Partida {
     // Lógica de Truco y Ganador
     private boolean trucoUsado = false;
     private int manoTrucoUsada = -1;
-    private TipoJugador jugadorQueCanto = null;
     private Jugador ganador = null;
 
     // Constructor
@@ -44,10 +36,9 @@ public class Partida {
         Collections.shuffle(mazoRevuelto);
     }
 
-    public void inicializar(RivalBot bot,
+    public void inicializar(
                             Jugador jug1, Jugador jug2, int manoActual,
                             TipoJugador jugadorLocal, TipoJugador jugadorQueEmpieza) {
-        this.rivalBot = bot;
         this.jugador1 = jug1;
         this.jugador2 = jug2;
         this.jugadorLocal = jugadorLocal;
@@ -105,7 +96,6 @@ public class Partida {
         // ✅ IMPORTANTE: Resetear el truco al iniciar nueva ronda
         this.trucoUsado = false;
         this.manoTrucoUsada = -1;
-        this.jugadorQueCanto = null;
 
         System.out.println("[CLIENTE] Nueva ronda - Truco reseteado");
     }
@@ -143,9 +133,6 @@ public class Partida {
             System.out.println("[CLIENTE] No es tu turno");
             return false;
         }
-
-        // ✅ IMPORTANTE: NO marcar trucoUsado aquí
-        // El servidor lo validará y nos enviará la confirmación
         System.out.println("[CLIENTE] Validación OK, esperando respuesta del servidor");
         return true;
     }
@@ -162,23 +149,18 @@ public class Partida {
         return this.jugadorLocal == this.jugadorMano;
     }
 
-    public TipoJugador getJugadorLocal(){
-        return this.jugadorLocal;
-    }
-
-    // ✅ NUEVO: Método para actualizar el estado del truco desde el servidor
     public void actualizarTruco(boolean usado, int manoTruco) {
         this.trucoUsado = usado;
         this.manoTrucoUsada = manoTruco;
         System.out.println("[CLIENTE] Truco actualizado: usado=" + usado + ", mano=" + manoTruco);
     }
 
-    public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano, TipoJugador miRol) {
+    public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano) {
         this.manoActual = mano;
         this.estadoActual = nuevoTurno;
         this.jugadorMano = jugadorMano;
 
-      if(miRol == TipoJugador.JUGADOR_1) {
+      if(jugadorLocal == TipoJugador.JUGADOR_1) {
           this.jugador1.setPuntos(p1);
           this.jugador2.setPuntos(p2);
       }

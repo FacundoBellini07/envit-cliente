@@ -79,7 +79,6 @@ public class ManoManager {
         float startX = (WORLD_WIDTH - anchoTotalMano) / 2f;
         float Y_FINAL = WORLD_HEIGHT * 0.05f;
 
-        // ✅ IMPORTANTE: Limpiar inputs anteriores del multiplexer
         multiplexer.clear();
         cartaInputs.clear();
 

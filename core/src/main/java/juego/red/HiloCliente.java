@@ -19,7 +19,6 @@ public class HiloCliente extends Thread {
 
     private GameController listener;
 
-    // ✅ NUEVO: Variables para reintentos de conexión
     private boolean conectado = false;
     private Timer timerConexion;
 
@@ -37,9 +36,6 @@ public class HiloCliente extends Thread {
         }
     }
 
-    /**
-     * ✅ NUEVO: Enviar mensajes de conexión constantemente hasta recibir OK
-     */
     private void iniciarReintentos() {
         timerConexion = new Timer();
         timerConexion.scheduleAtFixedRate(new TimerTask() {

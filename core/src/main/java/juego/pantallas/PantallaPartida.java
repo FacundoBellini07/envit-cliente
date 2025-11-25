@@ -17,7 +17,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import juego.elementos.*;
 import juego.interfaces.GameController;
 import juego.personajes.Jugador;
-import juego.personajes.RivalBot;
 import juego.personajes.TipoJugador;
 import juego.red.HiloCliente;
 import juego.utilidades.GestorFuentes;
@@ -45,7 +44,6 @@ public class PantallaPartida implements Screen, GameController {
     private CartaRenderer cartaRenderer;
     private ManoManager manoManager;
 
-    private RivalBot rivalBot;
     private ManoRivalRenderer manoRivalRenderer;
     private ZonaJuego zonaJuegoRival;
     private ZonaJuego zonaJuegoJugador;
@@ -113,12 +111,10 @@ public class PantallaPartida implements Screen, GameController {
 
         hud = new Hud(jugadores.get(0), jugadores.get(1), WORLD_WIDTH, WORLD_HEIGHT, miRol);
 
-        //  Obtener fuentes del gestor centralizado
         GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
         fontBotonTruco = gestorFuentes.getBoton20();
         font = gestorFuentes.getMediana();
 
-        //  Cargar sonidos para la partida
         GestorSonido gestorSonido = GestorSonido.getInstancia();
         gestorSonido.cargarMusica("partida", "sounds/musicaF.wav");
         gestorSonido.cargarSonido("carta", "sounds/carta.wav");
@@ -126,10 +122,6 @@ public class PantallaPartida implements Screen, GameController {
         gestorSonido.cargarSonido("victoria", "sounds/victoria.wav");
         gestorSonido.cargarSonido("derrota", "sounds/derrota.wav");
 
-        //  Reproducir música de partida (opcional, si quieres música diferente al menú)
-        // gestorSonido.reproducirMusica("partida");
-
-        // Crear las dos zonas de juego
         float zonaAncho = CARTA_ANCHO * 1.5f;
         float zonaAlto = CARTA_ALTO * 1.3f;
 
@@ -184,30 +176,7 @@ public class PantallaPartida implements Screen, GameController {
         partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
-    private void crearBotonTruco() {
-        float btnTrucoAncho = 80f;
-        float btnTrucoAlto = 60f;
-        float margenIzq = 20f;
-        float btnTrucoY = (WORLD_HEIGHT - btnTrucoAlto) / 2f;
 
-        //  Asegurar que fontBotonTruco no sea null
-        if (fontBotonTruco == null) {
-            GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
-            fontBotonTruco = gestorFuentes.getBoton20();
-            System.out.println("[PANTALLA] ⚠️ fontBotonTruco era null, reinicializado desde AplicarFuentes");
-        }
-
-        botonTruco = new BotonTruco(
-                margenIzq,
-                btnTrucoY,
-                btnTrucoAncho,
-                btnTrucoAlto,
-                fontBotonTruco,
-                viewport,
-                partida,
-                hc
-        );
-    }
 
     @Override
     public void render(float delta) {
@@ -227,21 +196,20 @@ public class PantallaPartida implements Screen, GameController {
                 Gdx.gl.glClearColor(0, 0, 0, 1);
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-                viewport.apply(); // ✅ AGREGAR ESTO
+                viewport.apply();
                 batch.setProjectionMatrix(viewport.getCamera().combined);
                 batch.begin();
 
-                font.getData().setScale(1.5f); // ✅ REDUCIR de 2.0f a 1.5f
+                font.getData().setScale(1.5f);
                 font.setColor(Color.RED);
 
-                // ✅ CENTRAR CORRECTAMENTE el texto
                 String msg = "¡RIVAL DESCONECTADO!";
                 GlyphLayout layout = new GlyphLayout(font, msg);
                 float textX = (WORLD_WIDTH - layout.width) / 2f;
                 float textY = (WORLD_HEIGHT + layout.height) / 2f + 50;
                 font.draw(batch, msg, textX, textY);
 
-                font.getData().setScale(1.0f); // ✅ REDUCIR de 1.2f a 1.0f
+                font.getData().setScale(1.0f);
                 font.setColor(Color.WHITE);
                 String msg2 = "Toca la pantalla para volver al menú";
                 layout = new GlyphLayout(font, msg2);
@@ -345,7 +313,6 @@ public class PantallaPartida implements Screen, GameController {
             return;
         }
 
-        //  CORREGIDO: Inicialización de la mano
         if (inicioRonda) {
             Carta[] miMano = jugadores.get(0).getMano();
 
@@ -362,7 +329,6 @@ public class PantallaPartida implements Screen, GameController {
             if (cartasDisponibles == 3) {
                 System.out.println("[UPDATE]  Inicializando mano con 3 cartas");
 
-                //  IMPORTANTE: Limpiar el InputMultiplexer antes de reinicializar
                 manoManager.getInputMultiplexer().clear();
 
                 manoManager.inicializarMano();
@@ -378,27 +344,30 @@ public class PantallaPartida implements Screen, GameController {
             }
         }
     }
-    private BitmapFont crearFuenteMedieval(int tamaño) {
-        try {
-            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
-                    Gdx.files.internal("fuentes/medieval.ttf")
-            );
-            FreeTypeFontGenerator.FreeTypeFontParameter parameter =
-                    new FreeTypeFontGenerator.FreeTypeFontParameter();
-            parameter.size = tamaño;
-            parameter.borderWidth = 1;
-            parameter.borderColor = Color.BLACK;
-            BitmapFont font = generator.generateFont(parameter);
-            generator.dispose();
-            return font;
-        } catch (Exception e) {
-            System.err.println("[PARTIDA] Error cargando fuente: " + e.getMessage());
-            return new BitmapFont();
-        }
-    }
 
-    private void volverAlMenu() {
-        debeVolverAlMenu = true;
+    private void crearBotonTruco() {
+        float btnTrucoAncho = 80f;
+        float btnTrucoAlto = 60f;
+        float margenIzq = 20f;
+        float btnTrucoY = (WORLD_HEIGHT - btnTrucoAlto) / 2f;
+
+        //  Asegurar que fontBotonTruco no sea null
+        if (fontBotonTruco == null) {
+            GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
+            fontBotonTruco = gestorFuentes.getBoton20();
+            System.out.println("[PANTALLA] ⚠️ fontBotonTruco era null, reinicializado desde AplicarFuentes");
+        }
+
+        botonTruco = new BotonTruco(
+                margenIzq,
+                btnTrucoY,
+                btnTrucoAncho,
+                btnTrucoAlto,
+                fontBotonTruco,
+                viewport,
+                partida,
+                hc
+        );
     }
 
     @Override
@@ -407,8 +376,7 @@ public class PantallaPartida implements Screen, GameController {
         this.quienEmpieza = idMano;
         TipoJugador tipoMano = (idMano == 0) ? TipoJugador.JUGADOR_1 : TipoJugador.JUGADOR_2;
 
-        partida.inicializar(null,
-                jugadores.get(0), jugadores.get(1), mano, miRol, tipoMano);
+        partida.inicializar(jugadores.get(0), jugadores.get(1), mano, miRol, tipoMano);
 
         inicioRonda = true;
 
@@ -434,7 +402,7 @@ public class PantallaPartida implements Screen, GameController {
     }
 
     public void onEstadoActualizado(int mano, int p1, int p2, EstadoTurno turno, TipoJugador jugadorMano){
-        partida.actualizarEstado(mano, p1, p2, turno, jugadorMano, miRol);
+        partida.actualizarEstado(mano, p1, p2, turno, jugadorMano);
         System.out.println("[CLIENTE] Estado actualizado recibido: mano=" + mano + ", p1=" + p1 + ", p2=" + p2 + ", turno=" + turno + ", jugadorMano=" + jugadorMano);
 
 
