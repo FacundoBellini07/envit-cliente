@@ -1,8 +1,22 @@
 # Changelog
 
 Todos los cambios relevantes de este proyecto se documentarán aquí.  
-
 ---
+
+## [0.2.0] - 2025-11-23
+### Added
+- Implementado sistema de retruco y vale 4
+
+## [0.1.9] - 2025-11-23
+### Added
+- Agregado Gestor de fuentes y sonidos
+- Implementado efectos de sonido para acciones del juego
+- Se mejoró la interfaz gráfica del juego
+
+- ## [0.1.8] - 2025-11-18
+### Added
+- Implementado juego en red local
+
 ## [0.1.7] - 2025-11-03
 ### Added
 - Agregado sistema de turnos

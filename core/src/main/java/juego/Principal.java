@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import juego.pantallas.PantallaMenu;
 import juego.utilidades.GestorFuentes;
+import juego.utilidades.GestorSonido;
 
 public class Principal extends Game {
 
@@ -25,6 +26,7 @@ public class Principal extends Game {
 		batch.dispose();
 		super.dispose();
         GestorFuentes.getInstancia().dispose();
+        GestorSonido.getInstancia().dispose();
         System.out.println("Cerrando juego completamente...");
         System.exit(0);
 	}

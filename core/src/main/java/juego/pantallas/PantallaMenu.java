@@ -155,7 +155,7 @@ public class PantallaMenu implements Screen {
 
     private void cargarSonidos() {
 
-        gestorSonido.cargarMusica("menu","sounds/fuego.mp3");
+        gestorSonido.cargarMusica("menu","sounds/envit.ogg");
         gestorSonido.cargarSonido("click","sounds/click.wav");
         gestorSonido.reproducirMusica("menu");
     }

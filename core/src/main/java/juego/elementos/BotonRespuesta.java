@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import juego.pantallas.PartidaCliente;
 import juego.red.HiloCliente;
 import juego.utilidades.GestorSonido;
 
@@ -31,12 +32,16 @@ public class BotonRespuesta implements InputProcessor {
 
     private boolean visible = false;
 
+    private PartidaCliente partida;
+
     public BotonRespuesta(float x, float y, float ancho, float alto,
-                          BitmapFont font, Viewport viewport, HiloCliente hc) {
+                          BitmapFont font, Viewport viewport, HiloCliente hc,
+                          PartidaCliente partida) {
         this.btnRect = new Rectangle(x, y, ancho, alto);
         this.font = font;
         this.viewport = viewport;
         this.hc = hc;
+        this.partida = partida;
         this.gestorSonido = GestorSonido.getInstancia();
     }
 
@@ -57,6 +62,10 @@ public class BotonRespuesta implements InputProcessor {
 
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         if (!visible) return;
+
+        if (partida != null && partida.getEstadoTruco() == EstadoTruco.VALE_CUATRO_CANTADO) {
+            return;
+        }
 
         Color colorBtn;
         float escala = 1.3f; // ✅ CAMBIO: Escala idéntica a BotonTruco (era 1.0f)

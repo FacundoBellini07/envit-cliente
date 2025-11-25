@@ -33,9 +33,7 @@ public class GestorSonido {
         sonidos = new HashMap<>();
     }
 
-    /**
-     * Obtiene la instancia única del gestor de sonido
-     */
+
     public static GestorSonido getInstancia() {
         if (instancia == null) {
             instancia = new GestorSonido();
@@ -98,6 +96,9 @@ public class GestorSonido {
         }
     }
 
+    public boolean existeMusica(String nombre) {
+        return musicas.containsKey(nombre);
+    }
     /**
      * Reproduce un efecto de sonido
      */

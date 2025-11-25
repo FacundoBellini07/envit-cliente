@@ -70,7 +70,7 @@ public class Hud {
         dibujarIndicadorTurno(batch, esTurnoJugador);
 
         // ✅ CORRECCIÓN: Mostrar truco si está activo (sin importar la mano actual)
-        if (estadoTruco != EstadoTruco.SIN_TRUCO) {
+        if (estadoTruco != EstadoTruco.SIN_TRUCO && manoActual == 0) {
             dibujarIndicadorTruco(batch, estadoTruco);
         }
 

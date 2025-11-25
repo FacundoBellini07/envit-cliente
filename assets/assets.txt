@@ -9,8 +9,8 @@ libgdx.png
 sounds/carta.wav
 sounds/click.wav
 sounds/derrota.wav
+sounds/envit.ogg
 sounds/fuego.mp3
-sounds/musicaF.wav
 sounds/truco.mp3
 sounds/victoria.wav
 sprites/Baraja2.png

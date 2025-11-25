@@ -221,4 +221,12 @@ public class PartidaCliente {
         this.trucoQueridoEnEstaMano = querido;
         System.out.println("[CLIENTE] Estado trucoQuerido actualizado a: " + querido);
     }
+
+    public boolean esVale4() {
+        return estadoTruco == EstadoTruco.VALE_CUATRO_CANTADO;
+    }
+
+    public boolean estaBloqueoPorTruco() {
+        return trucoEnviadoEsperandoRespuesta && !esVale4();
+    }
 }

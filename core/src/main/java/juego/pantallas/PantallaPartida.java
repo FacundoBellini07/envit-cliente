@@ -120,7 +120,6 @@ public class PantallaPartida implements Screen, GameController {
         font = gestorFuentes.getMediana();
 
         GestorSonido gestorSonido = GestorSonido.getInstancia();
-        gestorSonido.cargarMusica("partida", "sounds/musicaF.wav");
         gestorSonido.cargarSonido("carta", "sounds/carta.wav");
         gestorSonido.cargarSonido("truco", "sounds/truco.mp3");
         gestorSonido.cargarSonido("victoria", "sounds/victoria.wav");
@@ -267,7 +266,7 @@ public class PantallaPartida implements Screen, GameController {
                 return;
             }
             boolean esMiTurnoDeCartas = partida.esMiTurnoLocal();
-            boolean bloqueoPorTruco = esperandoRespuestaRival || deboResponderTruco;
+            boolean bloqueoPorTruco = partida.estaBloqueoPorTruco() || deboResponderTruco;
 
             // Solo permito input si es mi turno Y NO estoy bloqueado por un truco pendiente
             manoManager.setEsMiTurno(esMiTurnoDeCartas && !bloqueoPorTruco);
@@ -448,7 +447,8 @@ public class PantallaPartida implements Screen, GameController {
                 btnRespuestaAlto,
                 fontBotonTruco,
                 viewport,
-                hc
+                hc,
+                partida
         );
 
         // Inicialmente oculto
@@ -467,6 +467,14 @@ public class PantallaPartida implements Screen, GameController {
 
         System.out.println("[CLIENTE] Partida iniciada. Mi rol: " + miRol + ", Empieza: " + tipoMano);
         System.out.println("[CLIENTE] inicioRonda marcado como true");
+        GestorSonido gestor = GestorSonido.getInstancia();
+
+        gestor.detenerMusica(); // 👈 NECESITAS ESTE MÉTODO EN GestorSonido
+        if (!gestor.existeMusica("musica_partida")) {
+            gestor.cargarMusica("musica_partida", "sounds/envit.ogg");
+        }
+
+        gestor.reproducirMusica("musica_partida");
     }
     public void onConectado(int id) {
         this.miID = id;
@@ -529,6 +537,7 @@ public class PantallaPartida implements Screen, GameController {
             System.out.println("[PANTALLA] Truco aceptado, el juego continúa.");
             this.deboResponderTruco = false;
             partida.setTrucoQuerido(true);
+            partida.confirmarTrucoEnviado();
         }
         else if (respuesta.equals("SUBIDA")) {
             System.out.println("[PANTALLA] El rival subió a: " + nuevoEstadoTruco);
@@ -539,8 +548,8 @@ public class PantallaPartida implements Screen, GameController {
                 System.out.println("[PANTALLA] Vale 4 alcanzado. Ocultando botón de respuesta.");
                 this.deboResponderTruco = false;
                 botonRespuesta.ocultar();
+                partida.confirmarTrucoEnviado();
             } else {
-                // Si es Retruco, mostramos el botón
                 this.deboResponderTruco = true;
                 botonRespuesta.mostrar();
             }
@@ -635,6 +644,7 @@ public class PantallaPartida implements Screen, GameController {
 
 
     public void onVolverAlMenu() {
+
         System.out.println("El rival se desconectó");
         this.rivalDesconectado = true;
     }
@@ -658,6 +668,7 @@ public class PantallaPartida implements Screen, GameController {
 
     @Override
     public void dispose() {
+        GestorSonido.getInstancia().detenerMusica();
             if (fontBotonTruco != null) {
                 fontBotonTruco = null;
             }
