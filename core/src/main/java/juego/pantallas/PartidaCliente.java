@@ -21,11 +21,13 @@ public class PartidaCliente {
     private TipoJugador jugadorLocal;
     private TipoJugador jugadorMano;
 
-    // ✅ NUEVO: Sistema de Truco mejorado
     private EstadoTruco estadoTruco = EstadoTruco.SIN_TRUCO;
     private int manoTrucoUsada = -1;
     private TipoJugador ultimoQueCanto = null;
     private Jugador ganador = null;
+
+    // ✅ NUEVO: Bloqueo local mientras esperamos respuesta del servidor
+    private boolean trucoEnviadoEsperandoRespuesta = false;
 
     public PartidaCliente() {
         Mazo mazoOriginal = new Mazo();
@@ -49,6 +51,7 @@ public class PartidaCliente {
         this.manoActual = manoActual;
         this.estadoTruco = EstadoTruco.SIN_TRUCO;
         this.ganador = null;
+        this.trucoEnviadoEsperandoRespuesta = false; // ✅ RESETEAR
 
         System.out.println("[CLIENTE] Partida inicializada. Rol Local: " + jugadorLocal + " - Empieza: " + jugadorQueEmpieza);
     }
@@ -65,6 +68,12 @@ public class PartidaCliente {
     }
 
     public boolean puedoCantarTruco() {
+        // ✅ BLOQUEAR si ya enviamos un truco y estamos esperando respuesta
+        if (trucoEnviadoEsperandoRespuesta) {
+            System.out.println("[CLIENTE] Truco bloqueado: esperando respuesta del servidor");
+            return false;
+        }
+
         // 1. No se puede si ya estamos en Vale Cuatro (tope máximo)
         if (!estadoTruco.puedeSubir()) {
             return false;
@@ -77,15 +86,11 @@ public class PartidaCliente {
 
         // 3. Lógica dividida: INICIAR vs RESPONDER
         if (estadoTruco == EstadoTruco.SIN_TRUCO) {
-
             if (!esMiTurnoLocal()) return false;
             if (!soyJugadorMano()) return false;
             if (!esPrimerTurnoEnMano()) return false;
-
         } else {
-
             if (ultimoQueCanto == jugadorLocal) return false;
-
         }
 
         return true;
@@ -96,8 +101,18 @@ public class PartidaCliente {
             return false;
         }
 
+        // ✅ MARCAR COMO ENVIADO LOCALMENTE (bloqueo inmediato)
+        this.trucoEnviadoEsperandoRespuesta = true;
+
         System.out.println("[CLIENTE] Validación OK para cantar " + estadoTruco.siguiente());
+        System.out.println("[CLIENTE] ⏸️ Truco bloqueado localmente hasta recibir respuesta");
         return true;
+    }
+
+    // ✅ NUEVO: Desbloquear cuando el servidor confirma
+    public void confirmarTrucoEnviado() {
+        this.trucoEnviadoEsperandoRespuesta = false;
+        System.out.println("[CLIENTE] 🔓 Truco desbloqueado por confirmación del servidor");
     }
 
     public int getManoActual() {
@@ -113,16 +128,12 @@ public class PartidaCliente {
     }
 
     public boolean isTrucoActivoEnManoActual() {
-        // El truco está activo si se cantó en la mano 0 (primera mano)
-        // y sus puntos aplican a TODA la ronda (manos 0, 1, 2)
         return estadoTruco != EstadoTruco.SIN_TRUCO && manoTrucoUsada == 0;
     }
 
     public int getManoTrucoUsada() {
         return manoTrucoUsada;
     }
-
-
 
     public EstadoTurno getEstadoActual() {
         return estadoActual;
@@ -136,11 +147,13 @@ public class PartidaCliente {
         return this.jugadorLocal == this.jugadorMano;
     }
 
-    // ✅ NUEVO: Actualizar estado del truco desde el servidor
     public void actualizarTruco(String estadoTrucoStr, int manoTruco, String ultimoCantoStr) {
         this.estadoTruco = EstadoTruco.valueOf(estadoTrucoStr);
         this.manoTrucoUsada = manoTruco;
         this.ultimoQueCanto = ultimoCantoStr != null ? TipoJugador.valueOf(ultimoCantoStr) : null;
+
+        // ✅ DESBLOQUEAR cuando recibimos actualización del servidor
+        this.trucoEnviadoEsperandoRespuesta = false;
 
         System.out.println("[CLIENTE] Truco actualizado: " + estadoTruco + ", mano=" + manoTruco + ", último=" + ultimoQueCanto);
     }
@@ -192,6 +205,7 @@ public class PartidaCliente {
     public TipoJugador getUltimoQueCanto() {
         return ultimoQueCanto;
     }
+
     public void setEstadoTruco(EstadoTruco estadoTruco) {
         this.estadoTruco = estadoTruco;
         System.out.println("[CLIENTE] Estado de Truco actualizado manualmente a: " + estadoTruco);

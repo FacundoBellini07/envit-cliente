@@ -67,6 +67,7 @@ public class PantallaPartida implements Screen, GameController {
     private PantallaFinal pantallaFinal;
 
     private BotonTruco botonTruco;
+    private BotonRespuesta botonRespuesta;
 
     private boolean rivalDesconectado = false;
     private boolean debeVolverAlMenu = false;
@@ -170,34 +171,41 @@ public class PantallaPartida implements Screen, GameController {
 
         Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
 
-        crearBotonTruco();
-        System.out.println("\n[PANTALLA] ========================================");
-        System.out.println("[PANTALLA] Configurando InputMultiplexer");
-        System.out.println("[PANTALLA] ========================================\n");
-
-        // ✅ AGREGAR BOTÓN PRIMERO
-        InputMultiplexer multiplexer = manoManager.getInputMultiplexer();
-        System.out.println("[PANTALLA] Agregando BotonTruco como PRIMER processor");
-        multiplexer.addProcessor(botonTruco);
-
-        // ✅ CONFIGURAR COMO INPUT PRINCIPAL
-        System.out.println("[PANTALLA] Configurando multiplexer como InputProcessor principal");
-        Gdx.input.setInputProcessor(multiplexer);
-
-        // ✅ VERIFICAR ORDEN
-        System.out.println("[PANTALLA] Orden de processors:");
-        for (int i = 0; i < multiplexer.getProcessors().size; i++) {
-            System.out.println("[PANTALLA]   " + i + ": " + multiplexer.getProcessors().get(i).getClass().getSimpleName());
-        }
-        System.out.println("[PANTALLA] ========================================\n");
 
 
-        pantallaFinal = new PantallaFinal(
-                viewport, hud, WORLD_WIDTH, WORLD_HEIGHT, miRol
-        );
 
-        partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
-        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            crearBotonTruco();
+            crearBotonRespuesta(); // ✅ NUEVO
+
+            System.out.println("\n[PANTALLA] ========================================");
+            System.out.println("[PANTALLA] Configurando InputMultiplexer");
+            System.out.println("[PANTALLA] ========================================\n");
+
+            InputMultiplexer multiplexer = manoManager.getInputMultiplexer();
+
+            // ✅ AGREGAR BOTÓN DE RESPUESTA PRIMERO (máxima prioridad cuando está visible)
+            System.out.println("[PANTALLA] Agregando BotonRespuesta como PRIMER processor");
+            multiplexer.addProcessor(botonRespuesta);
+
+            System.out.println("[PANTALLA] Agregando BotonTruco como SEGUNDO processor");
+            multiplexer.addProcessor(botonTruco);
+
+            System.out.println("[PANTALLA] Configurando multiplexer como InputProcessor principal");
+            Gdx.input.setInputProcessor(multiplexer);
+
+            // ✅ VERIFICAR ORDEN
+            System.out.println("[PANTALLA] Orden de processors:");
+            for (int i = 0; i < multiplexer.getProcessors().size; i++) {
+                System.out.println("[PANTALLA]   " + i + ": " + multiplexer.getProcessors().get(i).getClass().getSimpleName());
+            }
+            System.out.println("[PANTALLA] ========================================\n");
+
+            pantallaFinal = new PantallaFinal(
+                    viewport, hud, WORLD_WIDTH, WORLD_HEIGHT, miRol
+            );
+
+            partida.setZonaJuegos(zonaJuegoJugador, zonaJuegoRival);
+            resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
 
@@ -300,7 +308,7 @@ public class PantallaPartida implements Screen, GameController {
 
 
             botonTruco.render(batch, shapeRenderer);
-
+            botonRespuesta.render(batch, shapeRenderer);
             // 6. DIBUJAR HUD
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
             hud.render(batch, partida.getManoActual(), partida.esMiTurnoLocal(),
@@ -311,6 +319,7 @@ public class PantallaPartida implements Screen, GameController {
     public void update(float delta) {
         if (!pantallaFinal.isActiva() && !partida.partidaTerminada()) {
             botonTruco.update(delta);
+            botonRespuesta.update(delta);
         }
 
         // ===============================================
@@ -412,6 +421,35 @@ public class PantallaPartida implements Screen, GameController {
                 hc
         );
     }
+    private void crearBotonRespuesta() {
+        float btnRespuestaAncho = 80f;
+        float btnRespuestaAlto = 60f;
+        float margenIzq = 20f;
+        float espacioEntreBotones = 10f;
+
+        // Posición: pegado a la derecha del botón de truco
+        float btnRespuestaX = margenIzq + 80f + espacioEntreBotones; // 80f es el ancho del botón truco
+        float btnRespuestaY = (WORLD_HEIGHT - btnRespuestaAlto) / 2f;
+
+        if (fontBotonTruco == null) {
+            GestorFuentes gestorFuentes = GestorFuentes.getInstancia();
+            fontBotonTruco = gestorFuentes.getBoton20();
+            System.out.println("[PANTALLA] ⚠️ fontBotonTruco era null, reinicializado desde GestorFuentes");
+        }
+
+         botonRespuesta = new BotonRespuesta(
+                btnRespuestaX,
+                btnRespuestaY,
+                btnRespuestaAncho,
+                btnRespuestaAlto,
+                fontBotonTruco,
+                viewport,
+                hc
+        );
+
+        // Inicialmente oculto
+        botonRespuesta.ocultar();
+    }
 
     @Override
     public void startGame(int idMano) {
@@ -474,21 +512,36 @@ public class PantallaPartida implements Screen, GameController {
         this.mostrarMensajeTrucoRival = true;
         this.deboResponderTruco = true;
         this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
+        botonRespuesta.mostrar();
+
     }
     public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {
-        this.esperandoRespuestaRival = false; // 🔓 DESBLOQUEA MI INTERFAZ (P1)
+        System.out.println("[PANTALLA] Rival respondió: " + respuesta);
+
+        this.esperandoRespuestaRival = false; // 🔓 DESBLOQUEA MI INTERFAZ
+
+        // ✅ OCULTAR BOTÓN DE RESPUESTA
+        botonRespuesta.ocultar();
 
         if (respuesta.equals("QUIERO")) {
-            // El juego continúa con el Truco aceptado (P1 puede tirar carta)
             System.out.println("[PANTALLA] Truco aceptado, el juego continúa.");
+            this.deboResponderTruco = false;
         }
         else if (respuesta.equals("SUBIDA")) {
-            // El rival subió (P1 debe responder ahora)
             System.out.println("[PANTALLA] El rival subió a: " + nuevoEstadoTruco);
-            // P1 debe pasar a estado "deboResponderTruco" ahora para responder el RETRUCO
-            this.deboResponderTruco = true;
-            // Actualiza el estado del truco en PartidaCliente
-            partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
+
+            // ✅ Si subió a VALE_CUATRO, no necesito responder
+            if (nuevoEstadoTruco.equals("VALE_CUATRO_CANTADO")) {
+                System.out.println("[PANTALLA] Vale 4 alcanzado, no se puede subir más");
+                this.deboResponderTruco = false;
+            } else {
+                // Si subió a RETRUCO, ahora debo responder
+                this.deboResponderTruco = true;
+                partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
+
+                // ✅ MOSTRAR BOTÓN DE RESPUESTA NUEVAMENTE
+                botonRespuesta.mostrar();
+            }
         }
     }
     public void onTrucoEnviadoLocal() {
