@@ -6,16 +6,13 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import java.util.HashMap;
 
-/**
- * Gestor centralizado de fuentes para el juego.
- * Evita duplicación de código y garantiza que las fuentes siempre estén disponibles.
- */
+
 public class GestorFuentes {
 
     private static GestorFuentes instancia;
     private HashMap<String, BitmapFont> fuentes;
     private final String RUTA_FUENTE = "fuentes/medieval.ttf";
-    private boolean fuentesDisponibles = false; // ✅ AGREGAR
+    private boolean fuentesDisponibles = false; //
 
     private GestorFuentes() {
         fuentes = new HashMap<>();
@@ -41,8 +38,8 @@ public class GestorFuentes {
             paramGrande.size = 48;
             paramGrande.borderWidth = 2;
             paramGrande.borderColor = Color.BLACK;
-            paramGrande.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramGrande.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramGrande.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
+            paramGrande.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("grande", generator.generateFont(paramGrande));
 
             // Fuente MEDIANA para información del juego (32px)
@@ -51,16 +48,16 @@ public class GestorFuentes {
             paramMediana.size = 32;
             paramMediana.borderWidth = 1;
             paramMediana.borderColor = Color.BLACK;
-            paramMediana.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramMediana.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramMediana.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
+            paramMediana.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("mediana", generator.generateFont(paramMediana));
 
             // Fuente PEQUEÑA para detalles (24px)
             FreeTypeFontGenerator.FreeTypeFontParameter paramPequeña =
                     new FreeTypeFontGenerator.FreeTypeFontParameter();
             paramPequeña.size = 24;
-            paramPequeña.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramPequeña.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramPequeña.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
+            paramPequeña.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("pequeña", generator.generateFont(paramPequeña));
 
             // Fuente para botón Truco (28px)
@@ -69,8 +66,8 @@ public class GestorFuentes {
             paramBoton28.size = 28;
             paramBoton28.borderWidth = 1;
             paramBoton28.borderColor = Color.BLACK;
-            paramBoton28.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramBoton28.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramBoton28.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
+            paramBoton28.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("boton28", generator.generateFont(paramBoton28));
 
             // Fuente para botón Truco (20px) - ✅ AUMENTAR TAMAÑO A 24px
@@ -79,16 +76,16 @@ public class GestorFuentes {
             paramBoton20.size = 24; // CAMBIAR de 20 a 24
             paramBoton20.borderWidth = 1;
             paramBoton20.borderColor = Color.BLACK;
-            paramBoton20.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramBoton20.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramBoton20.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; 
+            paramBoton20.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("boton20", generator.generateFont(paramBoton20));
 
             // Fuente extra grande para menú (36px)
             FreeTypeFontGenerator.FreeTypeFontParameter paramMenuTitle =
                     new FreeTypeFontGenerator.FreeTypeFontParameter();
             paramMenuTitle.size = 36;
-            paramMenuTitle.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
-            paramMenuTitle.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear; // ✅ AGREGAR
+            paramMenuTitle.magFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
+            paramMenuTitle.minFilter = com.badlogic.gdx.graphics.Texture.TextureFilter.Linear;
             fuentes.put("menuTitle", generator.generateFont(paramMenuTitle));
 
             generator.dispose();

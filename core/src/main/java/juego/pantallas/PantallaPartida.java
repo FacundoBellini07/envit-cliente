@@ -570,6 +570,7 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {
         System.out.println("[PANTALLA] Rival respondió: " + respuesta);
 
+        // ✅ SIEMPRE desbloquear al recibir respuesta
         this.esperandoRespuestaRival = false;
         botonRespuesta.ocultar();
 
@@ -578,6 +579,10 @@ public class PantallaPartida implements Screen, GameController {
             this.deboResponderTruco = false;
             partida.setTrucoQuerido(true);
             partida.confirmarTrucoEnviado();
+
+            // ✅ IMPORTANTE: Rehabilitar inputs cuando se acepta
+            boolean esMiTurno = partida.esMiTurnoLocal();
+            manoManager.setEsMiTurno(esMiTurno);
         }
         else if (respuesta.equals("SUBIDA")) {
             System.out.println("[PANTALLA] El rival subió a: " + nuevoEstadoTruco);
@@ -585,11 +590,15 @@ public class PantallaPartida implements Screen, GameController {
             partida.setEstadoTruco(EstadoTruco.valueOf(nuevoEstadoTruco));
 
             if (nuevoEstadoTruco.equals("VALE_CUATRO_CANTADO")) {
-                System.out.println("[PANTALLA] Vale 4 alcanzado. Ocultando botón de respuesta.");
+                System.out.println("[PANTALLA] Vale 4 alcanzado. Ya no se puede subir más.");
                 this.deboResponderTruco = false;
                 botonRespuesta.ocultar();
                 partida.confirmarTrucoEnviado();
+
+                boolean esMiTurno = partida.esMiTurnoLocal();
+                manoManager.setEsMiTurno(esMiTurno);
             } else {
+                // Retruco: debo responder
                 this.deboResponderTruco = true;
                 botonRespuesta.mostrar();
             }

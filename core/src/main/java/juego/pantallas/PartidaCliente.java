@@ -159,12 +159,15 @@ public class PartidaCliente {
         this.manoTrucoUsada = manoTruco;
         this.ultimoQueCanto = ultimoCantoStr != null ? TipoJugador.valueOf(ultimoCantoStr) : null;
 
-        // ✅ DESBLOQUEAR cuando recibimos actualización del servidor
         this.trucoEnviadoEsperandoRespuesta = false;
+
+        if (this.estadoTruco == EstadoTruco.VALE_CUATRO_CANTADO) {
+            this.trucoQueridoEnEstaMano = true;
+            System.out.println("[CLIENTE] Vale 4 detectado, marcando como aceptado automáticamente");
+        }
 
         System.out.println("[CLIENTE] Truco actualizado: " + estadoTruco + ", mano=" + manoTruco + ", último=" + ultimoQueCanto);
     }
-
     public void actualizarEstado(int mano, int p1, int p2, EstadoTurno nuevoTurno, TipoJugador jugadorMano) {
         this.manoActual = mano;
         this.estadoActual = nuevoTurno;
@@ -227,6 +230,7 @@ public class PartidaCliente {
     }
 
     public boolean estaBloqueoPorTruco() {
+
         return trucoEnviadoEsperandoRespuesta && !esVale4();
     }
 }

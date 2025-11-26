@@ -5,10 +5,6 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import java.util.HashMap;
 
-/**
- * Gestor centralizado de sonido y música para el juego.
- * Maneja la reproducción de música de fondo y efectos de sonido.
- */
 public class GestorSonido {
 
     private static GestorSonido instancia;
@@ -16,6 +12,7 @@ public class GestorSonido {
     // Música de fondo
     private HashMap<String, Music> musicas;
     private Music musicaActual;
+    private String nombreMusicaActual;
 
     // Efectos de sonido
     private HashMap<String, Sound> sonidos;
@@ -32,7 +29,6 @@ public class GestorSonido {
         musicas = new HashMap<>();
         sonidos = new HashMap<>();
     }
-
 
     public static GestorSonido getInstancia() {
         if (instancia == null) {
@@ -55,9 +51,6 @@ public class GestorSonido {
         }
     }
 
-    /**
-     * Carga un efecto de sonido
-     */
     public void cargarSonido(String nombre, String rutaArchivo) {
         try {
             if (Gdx.files.internal(rutaArchivo).exists()) {
@@ -73,205 +66,259 @@ public class GestorSonido {
     }
 
     public void reproducirMusica(String nombre) {
-        synchronized (this) {
-            if (!musicaHabilitada) return;
-
-            Music musica = musicas.get(nombre);
-            if (musica != null) {
-
-                // 1. **PUNTO CRÍTICO:** Si ya hay música sonando y NO es la misma pista, detenerla.
-                // Esto previene la superposición de pistas.
-                if (musicaActual != null && musicaActual != musica) {
-                    musicaActual.stop();
-                }
-
-                // 2. Si ya es la misma música Y está sonando, no hacemos nada.
-                // Esto previene que una pantalla llame a reproducir la misma pista en cada `show()`.
-                if (musicaActual == musica && musicaActual.isPlaying()) {
-                    return;
-                }
-
-                // 3. Si llega aquí, es porque es una nueva pista o la pista actual estaba detenida/pausada.
-                musicaActual = musica;
-                musicaActual.setVolume(volumenMusica);
-                musicaActual.setLooping(true);
-                musicaActual.play();
-
-            } else {
-                System.err.println("Música no encontrada: " + nombre);
-            }
-        }
+        reproducirMusica(nombre, false);
     }
+
     public void reproducirMusica(String nombre, boolean reiniciar) {
         synchronized (this) {
             if (!musicaHabilitada) return;
 
             Music musica = musicas.get(nombre);
-            if (musica != null) {
+            if (musica == null) {
+                System.err.println("[SONIDO] Música no encontrada: " + nombre);
+                return;
+            }
 
-                // 1. Si es OTRA canción distinta, paramos la actual (comportamiento normal)
-                if (musicaActual != null && musicaActual != musica) {
-                    musicaActual.stop();
-                }
+            if (musicaActual == musica && nombre.equals(nombreMusicaActual)) {
 
-                // 2. Si es la MISMA canción...
-                if (musicaActual == musica) {
-                    if (reiniciar) {
-                        // ¡EL TRUCO! No hacemos stop(), solo rebobinamos
-                        musicaActual.setPosition(0);
-                        if (!musicaActual.isPlaying()) {
-                            musicaActual.play();
-                        }
-                    } else {
-                        // Si no pedimos reiniciar, y ya suena, no hacemos nada
-                        if (musicaActual.isPlaying()) return;
-                        musicaActual.play();
+                if (reiniciar) {
+                    String rutaArchivo = obtenerRutaMusica(nombre);
+                    if (rutaArchivo != null) {
+                        recargarMusicaLimpia(nombre, rutaArchivo);
                     }
-                    // Actualizamos referencia por si acaso
-                    musicaActual = musica;
-                    return;
+                } else {
+                    // Si ya está sonando y no pedimos reiniciar, no hacemos nada
+                    if (musicaActual.isPlaying()) {
+                        return;
+                    }
+                    // Si estaba pausada, reanudar
+                    musicaActual.play();
                 }
+                return;
+            }
 
-                // 3. Si es música nueva (o la actual era null)
+            if (musicaActual != null && musicaActual != musica) {
+                musicaActual.stop();
+            }
+
+            try {
                 musicaActual = musica;
+                nombreMusicaActual = nombre;
                 musicaActual.setVolume(volumenMusica);
                 musicaActual.setLooping(true);
                 musicaActual.play();
 
-            } else {
-                System.err.println("Música no encontrada: " + nombre);
+                System.out.println("[SONIDO] ▶️ Reproduciendo: " + nombre);
+            } catch (Exception e) {
+                System.err.println("[SONIDO] Error reproduciendo música: " + e.getMessage());
             }
         }
     }
 
-        public boolean existeMusica (String nombre){
-            return musicas.containsKey(nombre);
+    private String obtenerRutaMusica(String nombre) {
+        // Intentar OGG primero
+        String rutaOgg = "sounds/" + nombre + ".ogg";
+        if (Gdx.files.internal(rutaOgg).exists()) {
+            return rutaOgg;
         }
-        /**
-         * Reproduce un efecto de sonido
-         */
-        public void reproducirSonido (String nombre){
-            if (!efectosHabilitados) return;
 
-            Sound sonido = sonidos.get(nombre);
-            if (sonido != null) {
-                sonido.play(volumenEfectos);
-            } else {
-                System.err.println("[SONIDO] Sonido no encontrado: " + nombre);
+        // Intentar MP3
+        String rutaMp3 = "sounds/" + nombre + ".mp3";
+        if (Gdx.files.internal(rutaMp3).exists()) {
+            return rutaMp3;
+        }
+
+        System.err.println("[SONIDO] No se encontró archivo para: " + nombre);
+        return null;
+    }
+
+    private void recargarMusicaLimpia(String nombre, String rutaArchivo) {
+        try {
+            System.out.println("[SONIDO] 🔄 Recargando música: " + nombre);
+
+            // 1. Detener y disponer la instancia vieja
+            if (musicaActual != null) {
+                musicaActual.stop();
+                musicaActual.dispose();
             }
-        }
 
-        /**
-         * Pausa la música actual
-         */
-        public void pausarMusica () {
-            synchronized (this) {
-                if (musicaActual != null && musicaActual.isPlaying()) {
+            // 2. Crear nueva instancia fresca
+            Music musicaNueva = Gdx.audio.newMusic(Gdx.files.internal(rutaArchivo));
+            musicas.put(nombre, musicaNueva);
+
+            // 3. Configurar y reproducir
+            musicaActual = musicaNueva;
+            nombreMusicaActual = nombre;
+            musicaActual.setVolume(volumenMusica);
+            musicaActual.setLooping(true);
+            musicaActual.play();
+
+            System.out.println("[SONIDO] ✅ Música recargada exitosamente");
+        } catch (Exception e) {
+            System.err.println("[SONIDO] ❌ Error crítico recargando música: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public boolean existeMusica(String nombre) {
+        return musicas.containsKey(nombre);
+    }
+
+    public void reproducirSonido(String nombre) {
+        if (!efectosHabilitados) return;
+
+        Sound sonido = sonidos.get(nombre);
+        if (sonido != null) {
+            try {
+                sonido.play(volumenEfectos);
+            } catch (Exception e) {
+                System.err.println("[SONIDO] Error reproduciendo sonido " + nombre + ": " + e.getMessage());
+            }
+        } else {
+            System.err.println("[SONIDO] Sonido no encontrado: " + nombre);
+        }
+    }
+
+    public void pausarMusica() {
+        synchronized (this) {
+            if (musicaActual != null && musicaActual.isPlaying()) {
+                try {
                     musicaActual.pause();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error pausando música: " + e.getMessage());
                 }
             }
         }
+    }
 
-        /**
-         * Reanuda la música pausada
-         */
-        public void reanudarMusica () {
+    public void reanudarMusica() {
+        synchronized (this) {
             if (musicaActual != null && !musicaActual.isPlaying()) {
-                musicaActual.play();
+                try {
+                    musicaActual.play();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error reanudando música: " + e.getMessage());
+                }
             }
         }
+    }
 
-        /**
-         * Detiene la música actual
-         */
-        public void detenerMusica () {
-            synchronized (this){
+    public void detenerMusica() {
+        synchronized (this) {
             if (musicaActual != null) {
-                musicaActual.stop();
+                try {
+                    musicaActual.stop();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error deteniendo música: " + e.getMessage());
+                }
                 musicaActual = null;
+                nombreMusicaActual = null;
             }
         }
-        }
+    }
 
-        /**
-         * Establece el volumen de la música (0.0 a 1.0)
-         */
-        public void setVolumenMusica ( float volumen){
-            this.volumenMusica = Math.max(0f, Math.min(1f, volumen));
-            if (musicaActual != null) {
+    public void setVolumenMusica(float volumen) {
+        this.volumenMusica = Math.max(0f, Math.min(1f, volumen));
+        if (musicaActual != null) {
+            try {
                 musicaActual.setVolume(this.volumenMusica);
+            } catch (Exception e) {
+                System.err.println("[SONIDO] Error ajustando volumen: " + e.getMessage());
             }
-
-            System.out.println("[SONIDO] Volumen música: " + (int) (this.volumenMusica * 100) + "%");
         }
+        System.out.println("[SONIDO] Volumen música: " + (int)(this.volumenMusica * 100) + "%");
+    }
 
-        /**
-         * Establece el volumen de los efectos (0.0 a 1.0)
-         */
-        public void setVolumenEfectos ( float volumen){
-            this.volumenEfectos = Math.max(0f, Math.min(1f, volumen));
-            System.out.println("[SONIDO] Volumen efectos: " + (int) (this.volumenEfectos * 100) + "%");
-        }
+    public void setVolumenEfectos(float volumen) {
+        this.volumenEfectos = Math.max(0f, Math.min(1f, volumen));
+        System.out.println("[SONIDO] Volumen efectos: " + (int)(this.volumenEfectos * 100) + "%");
+    }
 
-        /**
-         * Habilita o deshabilita la música
-         */
-        public void setMusicaHabilitada ( boolean habilitada){
+    public void setMusicaHabilitada(boolean habilitada) {
+        synchronized (this) {
             this.musicaHabilitada = habilitada;
             if (!habilitada && musicaActual != null) {
-                musicaActual.pause();
+                try {
+                    musicaActual.pause();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error deshabilitando música: " + e.getMessage());
+                }
             } else if (habilitada && musicaActual != null) {
-                musicaActual.play();
+                try {
+                    musicaActual.play();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error habilitando música: " + e.getMessage());
+                }
             }
         }
+    }
 
-        /**
-         * Habilita o deshabilita los efectos de sonido
-         */
-        public void setEfectosHabilitados ( boolean habilitados){
-            this.efectosHabilitados = habilitados;
-        }
+    public void setEfectosHabilitados(boolean habilitados) {
+        this.efectosHabilitados = habilitados;
+    }
 
-        // Getters
-        public float getVolumenMusica () {
-            return volumenMusica;
-        }
+    // Getters
+    public float getVolumenMusica() {
+        return volumenMusica;
+    }
 
-        public float getVolumenEfectos () {
-            return volumenEfectos;
-        }
+    public float getVolumenEfectos() {
+        return volumenEfectos;
+    }
 
-        public boolean isMusicaHabilitada () {
-            return musicaHabilitada;
-        }
+    public boolean isMusicaHabilitada() {
+        return musicaHabilitada;
+    }
 
-        public boolean isEfectosHabilitados () {
-            return efectosHabilitados;
-        }
+    public boolean isEfectosHabilitados() {
+        return efectosHabilitados;
+    }
 
-        /**
-         * Libera todos los recursos de sonido
-         */
-        public void dispose () {
-            // Detener y liberar música
-            for (Music musica : musicas.values()) {
+
+    public void dispose() {
+        synchronized (this) {
+            System.out.println("[SONIDO] Iniciando limpieza de recursos...");
+
+            // Detener música actual
+            if (musicaActual != null) {
+                try {
+                    musicaActual.stop();
+                } catch (Exception e) {
+                    System.err.println("[SONIDO] Error deteniendo música en dispose: " + e.getMessage());
+                }
+            }
+
+            // Liberar todas las músicas
+            for (String nombre : musicas.keySet()) {
+                Music musica = musicas.get(nombre);
                 if (musica != null) {
-                    musica.stop();
-                    musica.dispose();
+                    try {
+                        musica.stop();
+                        musica.dispose();
+                    } catch (Exception e) {
+                        System.err.println("[SONIDO] Error liberando música " + nombre + ": " + e.getMessage());
+                    }
                 }
             }
             musicas.clear();
 
             // Liberar efectos de sonido
-            for (Sound sonido : sonidos.values()) {
+            for (String nombre : sonidos.keySet()) {
+                Sound sonido = sonidos.get(nombre);
                 if (sonido != null) {
-                    sonido.dispose();
+                    try {
+                        sonido.dispose();
+                    } catch (Exception e) {
+                        System.err.println("[SONIDO] Error liberando sonido " + nombre + ": " + e.getMessage());
+                    }
                 }
             }
             sonidos.clear();
 
             musicaActual = null;
-            System.out.println("[SONIDO] Recursos liberados");
+            nombreMusicaActual = null;
+
+            System.out.println("[SONIDO] ✅ Recursos liberados");
         }
     }
-
+}
