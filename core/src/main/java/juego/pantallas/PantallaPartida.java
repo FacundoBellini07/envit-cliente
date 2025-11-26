@@ -304,11 +304,6 @@ public class PantallaPartida implements Screen, GameController {
                 pantallaFinal.render(batch, shapeRenderer);
                 return;
             }
-            boolean esMiTurnoDeCartas = partida.esMiTurnoLocal();
-            boolean bloqueoPorTruco = partida.estaBloqueoPorTruco() || deboResponderTruco;
-
-            // Solo permito input si es mi turno Y NO estoy bloqueado por un truco pendiente
-            manoManager.setEsMiTurno(esMiTurnoDeCartas && !bloqueoPorTruco);
 
             // DIBUJAR GUI DE RESPUESTA SI ES NECESARIO
             if (deboResponderTruco) {
@@ -375,10 +370,9 @@ public class PantallaPartida implements Screen, GameController {
                 mostrarMensajeTrucoRival = false;
             }
         }
-
-        // 3. Control de Turno del ManoManager (que hace el drag de cartas)
-        // Este código DEBE IR DESPUÉS del chequeo del botón de Truco.
-        manoManager.setEsMiTurno(partida.esMiTurnoLocal());
+        boolean esMiTurno = partida.esMiTurnoLocal();
+        boolean estoyBloqueado = esperandoRespuestaRival || deboResponderTruco;
+        manoManager.setEsMiTurno(esMiTurno && !estoyBloqueado);
 
         // 4. Chequeos de fin de partida y finalización
         if (pantallaFinal.isActiva()) {
@@ -506,14 +500,16 @@ public class PantallaPartida implements Screen, GameController {
 
         System.out.println("[CLIENTE] Partida iniciada. Mi rol: " + miRol + ", Empieza: " + tipoMano);
         System.out.println("[CLIENTE] inicioRonda marcado como true");
+
         GestorSonido gestor = GestorSonido.getInstancia();
 
-        gestor.detenerMusica(); // 👈 NECESITAS ESTE MÉTODO EN GestorSonido
-        if (!gestor.existeMusica("musica_partida")) {
-            gestor.cargarMusica("musica_partida", "sounds/envit.ogg");
-        }
+        if (gestor.existeMusica("menu")) {
+            gestor.reproducirMusica("menu", true);
+        } else {
 
-        gestor.reproducirMusica("musica_partida");
+            gestor.cargarMusica("menu", "sounds/envit.ogg");
+            gestor.reproducirMusica("menu", true);
+        }
     }
     public void onConectado(int id) {
         this.miID = id;
@@ -602,6 +598,7 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoEnviadoLocal() {
         this.esperandoRespuestaRival = true; // 🔒 BLOQUEA MIS CARTAS y botones de canto
         this.deboResponderTruco = false;
+        this.manoManager.deshabilitarInputs();
         if (botonRespuesta != null) {
             botonRespuesta.ocultar();
         }
@@ -712,24 +709,45 @@ public class PantallaPartida implements Screen, GameController {
 
     @Override
     public void dispose() {
-        GestorSonido.getInstancia().detenerMusica();
-            if (fontBotonTruco != null) {
-                fontBotonTruco = null;
+        GestorSonido.getInstancia().dispose();
+
+        // ✅ PRIMERO: Detener y esperar el hilo de red
+        if (hc != null) {
+            System.out.println("[PANTALLA] Deteniendo HiloCliente...");
+            hc.detener();
+            try {
+                // ✅ Esperar máximo 2 segundos a que termine
+                hc.join(2000);
+                if (hc.isAlive()) {
+                    System.err.println("[PANTALLA] ⚠️ HiloCliente no terminó a tiempo, forzando interrupción");
+                    hc.interrupt();
+                } else {
+                    System.out.println("[PANTALLA] ✅ HiloCliente detenido correctamente");
+                }
+            } catch (InterruptedException e) {
+                System.err.println("[PANTALLA] Interrupción al esperar HiloCliente");
+                Thread.currentThread().interrupt();
             }
-            if (font != null) {
-                font = null;
-            }
-            if (fondoPartida != null) fondoPartida.dispose();
-            if (mazoSprite != null) mazoSprite.dispose();
-            if (dorsoCartaSprite != null) dorsoCartaSprite.dispose();
-            if (casilla != null) casilla.dispose();
-            if (batch != null) batch.dispose();
-            if (shapeRenderer != null) shapeRenderer.dispose();
-            if (hud != null) hud.dispose();
-            if (hc != null) {
-                hc.detener();
-            }
+
+            hc = null;
         }
+
+        if (fontBotonTruco != null) {
+            fontBotonTruco = null;
+        }
+        if (font != null) {
+            font = null;
+        }
+        if (fondoPartida != null) fondoPartida.dispose();
+        if (mazoSprite != null) mazoSprite.dispose();
+        if (dorsoCartaSprite != null) dorsoCartaSprite.dispose();
+        if (casilla != null) casilla.dispose();
+        if (batch != null) batch.dispose();
+        if (shapeRenderer != null) shapeRenderer.dispose();
+        if (hud != null) hud.dispose();
+
+        System.out.println("[PANTALLA] Dispose completado");
+    }
 
     }
 

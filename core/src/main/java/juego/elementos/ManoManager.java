@@ -144,6 +144,11 @@ public class ManoManager {
         }
     }
 
+    public void deshabilitarInputs() {
+        for (CartaInput input : cartaInputs) {
+            input.setHabilitado(false);
+        }
+    }
     public InputMultiplexer getInputMultiplexer() {
         return multiplexer;
     }

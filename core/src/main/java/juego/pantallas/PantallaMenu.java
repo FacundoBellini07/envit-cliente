@@ -420,7 +420,6 @@ public class PantallaMenu implements Screen {
     }
 
     private void startGame() {
-        gestorSonido.detenerMusica();
         game.setScreen(new PantallaPartida(game));
     }
 
@@ -523,7 +522,7 @@ public class PantallaMenu implements Screen {
 
     @Override
     public void hide() {
-        gestorSonido.pausarMusica();
+
     }
 
     @Override

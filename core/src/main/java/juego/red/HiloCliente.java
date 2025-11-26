@@ -42,13 +42,14 @@ public class HiloCliente extends Thread {
         }
     }
     private void iniciarCheckerServidor() {
-        timerCheckerServidor = new Timer();
+        timerCheckerServidor = new Timer(true);
         timerCheckerServidor.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (conectado && (System.currentTimeMillis() - ultimoMensajeServidor > TIEMPO_LIMITE_SERVER)) {
                     System.out.println("[CLIENTE] 🚨 TIMEOUT del SERVIDOR. Asumiendo desconexión.");
-                    detener(); // Cierra el socket
+                    detenerCheckerServidor();
+                    detener();
                     if (listener != null) {
                         listener.onServidorDesconectado(); // 🚨 NUEVO MÉTODO
                     }
@@ -75,9 +76,6 @@ public class HiloCliente extends Thread {
         }, 0, 1000); // Intentar cada 1 segundo
     }
 
-    /**
-     * ✅ NUEVO: Detener los reintentos de conexión
-     */
     private void detenerReintentos() {
         if (timerConexion != null) {
             timerConexion.cancel();
@@ -305,27 +303,53 @@ public class HiloCliente extends Thread {
         System.out.println("[CLIENTE] ========================================");
     }
     public void reiniciarBusqueda() {
+        System.out.println("[CLIENTE] Reiniciando búsqueda...");
+
         detener();
         try {
-            conexion = new DatagramSocket(); // Creamos un nuevo socket para la nueva búsqueda
-        } catch (SocketException e) {
-            System.err.println("[CLIENTE] Error al reabrir el socket: " + e.getMessage());
-            e.printStackTrace();
-            return; // Salir si falla
+            this.join(2000);
+            if (this.isAlive()) {
+                System.err.println("[CLIENTE] ⚠️ Thread no terminó, forzando...");
+                this.interrupt();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+
+        try {
+            if (conexion != null && !conexion.isClosed()) {
+                conexion.close();
+            }
+            conexion = new DatagramSocket();
+        } catch (SocketException e) {
+            System.err.println("[CLIENTE] Error al reabrir socket: " + e.getMessage());
+            return;
+        }
+
         fin = false;
         conectado = false;
-        ipserver = ipBroadcast; // Volver a apuntar a la IP de Broadcast
+        ipserver = ipBroadcast;
         iniciarReintentos();
+
+        this.start();
     }
 
     public void detener() {
+        System.out.println("[CLIENTE] Iniciando detención del hilo...");
+
         fin = true;
+
         detenerReintentos();
-        detenerCheckerServidor(); // ✅ AÑADIR AQUI
+        detenerCheckerServidor();
+
         if (conexion != null && !conexion.isClosed()) {
             conexion.close();
+            System.out.println("[CLIENTE] Socket cerrado");
         }
-        System.out.println("[CLIENTE] Hilo detenido correctamente.");
+
+        if (this.isAlive() && !this.isInterrupted()) {
+            this.interrupt();
+            System.out.println("[CLIENTE] Thread interrumpido");
+        }
     }
 }
