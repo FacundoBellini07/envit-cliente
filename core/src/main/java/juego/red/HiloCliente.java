@@ -236,8 +236,6 @@ public class HiloCliente extends Thread {
             String estadoTrucoStr = partes[5];
             int manoTruco = Integer.parseInt(partes[6]);
             String ultimoCantoStr = partes[7].equals("null") ? null : partes[7];
-
-            // ✅ ESTO DESBLOQUEARÁ EL BOTÓN AUTOMÁTICAMENTE
             listener.onTrucoActualizado(estadoTrucoStr, manoTruco, ultimoCantoStr);
 
             System.out.println("[CLIENTE] Truco actualizado: " + estadoTrucoStr +

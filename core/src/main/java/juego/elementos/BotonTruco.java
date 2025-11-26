@@ -218,24 +218,41 @@ public class BotonTruco implements InputProcessor {
     private boolean intentarCantarTruco() {
         System.out.println("[BOTON_TRUCO] --> intentarCantarTruco()");
 
-        boolean validacion = partida.cantarTruco();
-        System.out.println("[BOTON_TRUCO] partida.cantarTruco() retornó: " + validacion);
+        // 1. Obtenemos el estado actual para saber qué mensaje enviar
+        EstadoTruco estadoActual = partida.getEstadoTruco();
+        String mensajeAEnviar = "TRUCO"; // Por defecto
 
+        if (estadoActual == EstadoTruco.TRUCO_CANTADO) {
+            mensajeAEnviar = "RETRUCO";
+        } else if (estadoActual == EstadoTruco.RETRUCO_CANTADO) {
+
+            mensajeAEnviar = "VALE_CUATRO";
+        }
+
+        // 2. Validar en cliente
+        boolean validacion = partida.cantarTruco();
         if (!validacion) {
-            System.out.println("[BOTON_TRUCO] ❌ Validación falló en PartidaCliente");
             return false;
         }
 
         gestorSonido.reproducirSonido("truco");
-        System.out.println("[BOTON_TRUCO] 🔊 Sonido reproducido");
 
-        System.out.println("[BOTON_TRUCO] 📤 Enviando mensaje TRUCO al servidor...");
-        hc.enviarMensaje("TRUCO");
+        // 3. ENVIAR EL MENSAJE CORRECTO
+        System.out.println("[BOTON_TRUCO] 📤 Enviando mensaje: " + mensajeAEnviar);
+        hc.enviarMensaje(mensajeAEnviar);
 
-        System.out.println("[BOTON_TRUCO] 🔒 Notificando truco enviado (bloqueo local)...");
-        hc.notificarTrucoEnviado();
+        // 4. Lógica de bloqueo (Tu arreglo anterior para Vale 4)
+        EstadoTruco proximoEstado = estadoActual.siguiente();
+        boolean esValeCuatro = (proximoEstado == EstadoTruco.VALE_CUATRO_CANTADO);
 
-        System.out.println("[BOTON_TRUCO] ✅ Truco cantado exitosamente");
+        if (esValeCuatro) {
+            // Caso Vale 4: NO bloqueamos
+            partida.confirmarTrucoEnviado();
+        } else {
+            // Caso Truco/Retruco: SÍ bloqueamos
+            hc.notificarTrucoEnviado();
+        }
+
         return true;
     }
 
