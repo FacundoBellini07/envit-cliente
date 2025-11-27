@@ -28,7 +28,6 @@ public class PartidaCliente {
 
     private Jugador ganador = null;
 
-    // ✅ NUEVO: Bloqueo local mientras esperamos respuesta del servidor
     private boolean trucoEnviadoEsperandoRespuesta = false;
 
     public PartidaCliente() {
@@ -55,7 +54,6 @@ public class PartidaCliente {
         this.manoActual = manoActual;
         this.estadoTruco = EstadoTruco.SIN_TRUCO;
         this.ganador = null;
-        this.trucoEnviadoEsperandoRespuesta = false; // ✅ RESETEAR
 
         System.out.println("[CLIENTE] Partida inicializada. Rol Local: " + jugadorLocal + " - Empieza: " + jugadorQueEmpieza);
     }
@@ -72,7 +70,6 @@ public class PartidaCliente {
     }
 
     public boolean puedoCantarTruco() {
-        // ✅ BLOQUEAR si ya enviamos un truco y estamos esperando respuesta
         if (trucoEnviadoEsperandoRespuesta) {
             System.out.println("[CLIENTE] Truco bloqueado: esperando respuesta del servidor");
             return false;
@@ -108,7 +105,6 @@ public class PartidaCliente {
             return false;
         }
 
-        // ✅ MARCAR COMO ENVIADO LOCALMENTE (bloqueo inmediato)
         this.trucoEnviadoEsperandoRespuesta = true;
 
         System.out.println("[CLIENTE] Validación OK para cantar " + estadoTruco.siguiente());
@@ -116,7 +112,6 @@ public class PartidaCliente {
         return true;
     }
 
-    // ✅ NUEVO: Desbloquear cuando el servidor confirma
     public void confirmarTrucoEnviado() {
         this.trucoEnviadoEsperandoRespuesta = false;
         System.out.println("[CLIENTE] 🔓 Truco desbloqueado por confirmación del servidor");

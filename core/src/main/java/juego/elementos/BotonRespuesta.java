@@ -68,7 +68,7 @@ public class BotonRespuesta implements InputProcessor {
         }
 
         Color colorBtn;
-        float escala = 1.3f; // ✅ CAMBIO: Escala idéntica a BotonTruco (era 1.0f)
+        float escala = 1.3f;
 
         if (hovered) {
             float pulso = (float)Math.sin(animacionPulso) * 0.1f + 0.9f;
@@ -104,7 +104,7 @@ public class BotonRespuesta implements InputProcessor {
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
         font.setColor(colorTexto);
-        font.getData().setScale(0.8f); // ✅ CAMBIO: Escala de fuente a 0.8f (igual que BotonTruco)
+        font.getData().setScale(0.8f);
 
         String textoBoton = "QUIERO";
         GlyphLayout layout = new GlyphLayout(font, textoBoton);

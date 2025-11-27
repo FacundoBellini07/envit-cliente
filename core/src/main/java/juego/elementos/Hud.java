@@ -41,7 +41,6 @@ public class Hud {
 
     private void cargarFuentes() {
         try {
-            // ✅ Obtener fuentes del gestor centralizado
             GestorFuentes gestor = GestorFuentes.getInstancia();
 
             this.fontGrande = gestor.getGrande();
@@ -52,7 +51,6 @@ public class Hud {
         } catch (Exception e) {
             System.err.println("[HUD] ❌ Error cargando fuentes: " + e.getMessage());
 
-            // Fallback: crear fuentes por defecto
             fontGrande = new BitmapFont();
             fontMediana = new BitmapFont();
             fontPequeña = new BitmapFont();
@@ -69,7 +67,6 @@ public class Hud {
         dibujarInfoMano(batch, manoActual);
         dibujarIndicadorTurno(batch, esTurnoJugador);
 
-        // ✅ CORRECCIÓN: Mostrar truco si está activo (sin importar la mano actual)
         if (estadoTruco != EstadoTruco.SIN_TRUCO && manoActual == 0) {
             dibujarIndicadorTruco(batch, estadoTruco);
         }

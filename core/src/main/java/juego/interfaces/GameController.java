@@ -15,7 +15,7 @@ public interface GameController {
     void onNuevaRonda();
     void onVolverAlMenu();
     void onTrucoActualizado(String estadoTruco, int manoTruco, String ultimoCanto);
-    void onTrucoRespondido(String respuesta, String nuevoEstadoTruco); // ✅ NUEVO
+    void onTrucoRespondido(String respuesta, String nuevoEstadoTruco);
     void onTrucoEnviadoLocal();
     void onServidorDesconectado();
 }

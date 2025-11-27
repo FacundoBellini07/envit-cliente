@@ -17,7 +17,6 @@ public class ManoRivalRenderer {
 
     private int cartasDisponibles = 3; // Siempre empieza con 3
 
-    // Posiciones calculadas de los dorsos
     private Rectangle[] posicionesDorsos = new Rectangle[3];
 
     public ManoRivalRenderer(Texture dorso, ZonaJuego zona,
@@ -31,12 +30,9 @@ public class ManoRivalRenderer {
         this.CARTA_ALTO = cartaAlto;
         this.ESPACIADO = CARTA_ANCHO * 0.2f;
 
-        // Inicializar los rectángulos de posición
         for (int i = 0; i < 3; i++) {
             posicionesDorsos[i] = new Rectangle();
         }
-
-        // Calcular posiciones iniciales
         calcularPosiciones();
     }
 

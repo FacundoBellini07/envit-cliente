@@ -78,9 +78,6 @@ public class PantallaPartida implements Screen, GameController {
     private int miID = -1;
     private TipoJugador miRol;
     private int quienEmpieza;
-    private boolean mostrarMensajeTrucoRival;
-    private float tiempoMensajeTrucoRival = 0f;
-    private final float DURACION_MENSAJE_TRUCO = 5.0f;
 
     public PantallaPartida(Game game) {
         this.game = game;
@@ -171,11 +168,8 @@ public class PantallaPartida implements Screen, GameController {
 
         Gdx.input.setInputProcessor(manoManager.getInputMultiplexer());
 
-
-
-
             crearBotonTruco();
-            crearBotonRespuesta(); // ✅ NUEVO
+            crearBotonRespuesta();
 
             System.out.println("\n[PANTALLA] ========================================");
             System.out.println("[PANTALLA] Configurando InputMultiplexer");
@@ -183,7 +177,6 @@ public class PantallaPartida implements Screen, GameController {
 
             InputMultiplexer multiplexer = manoManager.getInputMultiplexer();
 
-            // ✅ AGREGAR BOTÓN DE RESPUESTA PRIMERO (máxima prioridad cuando está visible)
             System.out.println("[PANTALLA] Agregando BotonRespuesta como PRIMER processor");
             multiplexer.addProcessor(botonRespuesta);
 
@@ -305,11 +298,6 @@ public class PantallaPartida implements Screen, GameController {
                 return;
             }
 
-            // DIBUJAR GUI DE RESPUESTA SI ES NECESARIO
-            if (deboResponderTruco) {
-
-            }
-            // 1. DIBUJAR FONDO Y MAZO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
             this.batch.begin();
             batch.draw(fondoPartida, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -328,8 +316,6 @@ public class PantallaPartida implements Screen, GameController {
             zonaJuegoJugador.renderFondo(batch, casilla);
             zonaJuegoRival.renderFondo(batch, casilla);
 
-
-            // 3. DIBUJAR LAS CARTAS EN MANO
             this.batch.setProjectionMatrix(viewport.getCamera().combined);
             batch.begin();
             manoRivalRenderer.render(batch);
@@ -355,26 +341,13 @@ public class PantallaPartida implements Screen, GameController {
             botonRespuesta.update(delta);
         }
 
-        // ===============================================
-        // 2. RESTO DE ACTUALIZACIONES (Animaciones, timers, etc.)
-        // ===============================================
         animacion.update(delta);
 
-        if (partida.getManoActual() > 0) {
-            mostrarMensajeTrucoRival = false;
-        }
-
-        if (mostrarMensajeTrucoRival) {
-            tiempoMensajeTrucoRival -= delta;
-            if (tiempoMensajeTrucoRival <= 0) {
-                mostrarMensajeTrucoRival = false;
-            }
-        }
         boolean esMiTurno = partida.esMiTurnoLocal();
         boolean estoyBloqueado = esperandoRespuestaRival || deboResponderTruco;
         manoManager.setEsMiTurno(esMiTurno && !estoyBloqueado);
 
-        // 4. Chequeos de fin de partida y finalización
+
         if (pantallaFinal.isActiva()) {
             boolean solicitudVolver = pantallaFinal.update(delta);
             if (solicitudVolver) {
@@ -382,12 +355,7 @@ public class PantallaPartida implements Screen, GameController {
             }
             return;
         }
-        if (partida.partidaTerminada() && !pantallaFinal.isActiva()) {
-            // ... (Tu código para activar pantalla final) ...
-            return;
-        }
 
-        // 5. Lógica de inicio de ronda
         if (inicioRonda) {
             Carta[] miMano = jugadores.get(0).getMano();
 
@@ -421,7 +389,6 @@ public class PantallaPartida implements Screen, GameController {
                 System.out.println("[PANTALLA] Re-configurando InputProcessor");
                 Gdx.input.setInputProcessor(multiplexer);
 
-                // ✅ VERIFICAR ORDEN NUEVAMENTE
                 System.out.println("[PANTALLA] Orden FINAL de processors:");
                 for (int i = 0; i < multiplexer.getProcessors().size; i++) {
                     System.out.println("[PANTALLA]   " + i + ": " + multiplexer.getProcessors().get(i).getClass().getSimpleName());
@@ -484,7 +451,6 @@ public class PantallaPartida implements Screen, GameController {
                 partida
         );
 
-        // Inicialmente oculto
         botonRespuesta.ocultar();
     }
 
@@ -556,13 +522,11 @@ public class PantallaPartida implements Screen, GameController {
         }
     }
     public void onTrucoRival(){
-        this.mostrarMensajeTrucoRival = true;
         this.deboResponderTruco = true;
-        this.tiempoMensajeTrucoRival = DURACION_MENSAJE_TRUCO;
         botonRespuesta.mostrar();
 
     }
-    public void onServidorDesconectado() { // ✅ NUEVO
+    public void onServidorDesconectado() {
         System.out.println("[PANTALLA] Servidor desconectado (TIMEOUT)");
         this.servidorDesconectado = true;
 
@@ -570,7 +534,6 @@ public class PantallaPartida implements Screen, GameController {
     public void onTrucoRespondido(String respuesta, String nuevoEstadoTruco) {
         System.out.println("[PANTALLA] Rival respondió: " + respuesta);
 
-        // ✅ SIEMPRE desbloquear al recibir respuesta
         this.esperandoRespuestaRival = false;
         botonRespuesta.ocultar();
 
@@ -580,7 +543,6 @@ public class PantallaPartida implements Screen, GameController {
             partida.setTrucoQuerido(true);
             partida.confirmarTrucoEnviado();
 
-            // ✅ IMPORTANTE: Rehabilitar inputs cuando se acepta
             boolean esMiTurno = partida.esMiTurnoLocal();
             manoManager.setEsMiTurno(esMiTurno);
         }
@@ -617,11 +579,9 @@ public class PantallaPartida implements Screen, GameController {
     public void onCartaRecibida(int valor, Palo palo) {
         Carta carta = new Carta(valor, palo);
 
-        //  SIEMPRE agregar a jugadores.get(0) que es "yo"
         jugadores.get(0).agregarCarta(carta);
         System.out.println("[CLIENTE " + miRol + "] Carta agregada a MI mano: " + valor + " de " + palo);
 
-        // Verificar cuántas cartas tengo
         Carta[] miMano = jugadores.get(0).getMano();
 
         int cartasRecibidas = 0;
@@ -692,13 +652,11 @@ public class PantallaPartida implements Screen, GameController {
         Gdx.input.setInputProcessor(null);
     }
 
-
     public void onVolverAlMenu() {
 
         System.out.println("El rival se desconectó");
         this.rivalDesconectado = true;
     }
-
 
 
     @Override

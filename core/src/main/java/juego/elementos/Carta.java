@@ -18,7 +18,7 @@ public class Carta {
     public Carta(int valor, Palo palo) {
         this.valor = valor;
         this.palo = palo;
-        this.asignarPeso(valor, palo);  // ✅ Esto ahora SÍ asigna
+        this.asignarPeso(valor, palo);
 
         int cartaW = barajaTexture.getWidth() / 10;
         int cartaH = barajaTexture.getHeight() / 4;
@@ -138,7 +138,6 @@ public class Carta {
         this.jerarquia = 15;
     }
 
-    // ✅ NUEVO: equals y hashCode para comparar cartas correctamente
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

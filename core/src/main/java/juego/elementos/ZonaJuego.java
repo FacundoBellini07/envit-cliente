@@ -24,7 +24,6 @@ public class ZonaJuego {
         this.colorBorde = new Color(0.9f, 0.9f, 0.5f, 0.6f);
     }
 
-    // Vincular el renderer
     public void setCartaRenderer(CartaRenderer renderer) {
         this.cartaRenderer = renderer;
     }
@@ -39,7 +38,6 @@ public class ZonaJuego {
         return limites.contains(centroX, centroY);
     }
 
-    /** Agrega una carta a la zona de juego*/
     public void agregarCarta(Carta carta) {
         if (!cartasJugadas.contains(carta)) {
             cartasJugadas.add(carta);
@@ -57,9 +55,6 @@ public class ZonaJuego {
         }
     }
 
-    /**
-     * Dibuja el fondo de la zona
-     */
     public void renderFondo(SpriteBatch batch, Texture casilla) {
 
         batch.begin();
@@ -68,7 +63,6 @@ public class ZonaJuego {
     }
 
 
-    // ✅ NUEVO: Dibuja las cartas dentro de la zona
     public void renderCartas() {
         if (cartaRenderer == null) {
             System.err.println("ERROR: CartaRenderer no está vinculado a ZonaJuego");

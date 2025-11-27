@@ -34,7 +34,6 @@ public class HiloCliente extends Thread {
             ipserver = ipBroadcast;
             conexion = new DatagramSocket();
 
-            // ✅ NUEVO: Iniciar reintentos de conexión
             iniciarReintentos();
 
         } catch (SocketException | UnknownHostException e) {
@@ -51,7 +50,7 @@ public class HiloCliente extends Thread {
                     detenerCheckerServidor();
                     detener();
                     if (listener != null) {
-                        listener.onServidorDesconectado(); // 🚨 NUEVO MÉTODO
+                        listener.onServidorDesconectado();
                     }
                 }
             }
@@ -116,13 +115,11 @@ public class HiloCliente extends Thread {
         if (mensaje.equals("OK")) {
             System.out.println("[CLIENTE] ✅ Conectado al servidor");
 
-            // ✅ NUEVO: Marcar como conectado y detener reintentos
             conectado = true;
             detenerReintentos();
 
             ipserver = dp.getAddress();
 
-            // ✅ Mantener PING activo durante la partida
             new Timer().scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
@@ -189,11 +186,11 @@ public class HiloCliente extends Thread {
             detenerReintentos();
 
             if (conexion != null && !conexion.isClosed()) {
-                conexion.close(); // Cierra el socket
+                conexion.close();
             }
 
             if (listener != null) {
-                listener.onVolverAlMenu(); // La UI se encarga de permitir crear uno nuevo
+                listener.onVolverAlMenu();
             }
         }
         else {
@@ -259,7 +256,6 @@ public class HiloCliente extends Thread {
     }
     public void notificarTrucoEnviado() {
         if (listener != null) {
-            // Llama al nuevo método en PantallaPartida para que se bloquee localmente.
             listener.onTrucoEnviadoLocal();
         }
     }
